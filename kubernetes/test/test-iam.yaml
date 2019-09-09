@@ -1,0 +1,9 @@
+apiVersion: iamauthenticator.k8s.aws/v1alpha1
+kind: IAMIdentityMapping
+metadata:
+  name: tdegiacinto
+spec:
+  arn: arn:aws:iam::916842903476:user/tdegiacinto
+  username: tdegiacinto
+  groups:
+    - system:masters
