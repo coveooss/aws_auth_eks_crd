@@ -61,9 +61,9 @@ def apply_mapping(existing_cm, user_mapping):
 
 
 def ensure_user(user, user_list):
-    for i, u in enumerate(user_list):
+    for i, existing_user in enumerate(user_list):
         # Handle existing user
-        if u['username'] == user['username']:
+        if existing_user['username'] == user['username']:
             user_list[i] = user
             return user_list
     # Handle new user
@@ -73,8 +73,8 @@ def ensure_user(user, user_list):
 
 
 def delete_user(user, user_list):
-    for i, u in enumerate(user_list):
-        if u['username'] == user['username']:
+    for i, existing_user in enumerate(user_list):
+        if existing_user['username'] == user['username']:
             del user_list[i]
             return user_list
     else:
