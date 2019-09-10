@@ -23,7 +23,7 @@ spec:
       containers:
         - args:
             - --verbose
-          image: coveo/aws-auth-operator:v0.1
+          image: coveo/aws-auth-operator:0.1
           imagePullPolicy: IfNotPresent
           name: operator
           resources:
@@ -46,9 +46,23 @@ metadata:
   name: auth-operator-role-cluster
 rules:
   # Framework: knowing which other operators are running (i.e. peering).
+  - apiGroups: [zalando.org]
+    resources: [kopfpeerings,clusterkopfpeerings]
+    verbs: [list, watch, patch, get]
+
+  # Framework: posting the events about the handlers progress/errors.
+  - apiGroups: [events.k8s.io]
+    resources: [events]
+    verbs: [create]
+  - apiGroups: [""]
+    resources: [events]
+    verbs: [create]
+
+  # Application: watching & handling for the custom resource we declare.
   - apiGroups: [iamauthenticator.k8s.aws]
     resources: [iamidentitymappings]
     verbs: [list, watch, patch, get]
+
   - apiGroups: [apiextensions.k8s.io]
     resources: [customresourcedefinitions]
     verbs: [list, get]

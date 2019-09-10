@@ -6,4 +6,4 @@ ADD *.py /app/
 RUN python -m pip install -U -r /app/requirements.txt
 
 WORKDIR /app
-ENTRYPOINT ["/usr/local/bin/kopf", "run", "iam_mapping.py"]
+ENTRYPOINT ["/usr/local/bin/kopf", "run","--standalone", "iam_mapping.py"]
