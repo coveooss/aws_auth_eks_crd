@@ -17,7 +17,7 @@ API = client.CoreV1Api()
 
 @kopf.on.create('iamauthenticator.k8s.aws', 'v1alpha1', 'iamidentitymappings')
 def create_mapping(body: dict, meta: dict, spec: dict, **kwargs):
-    print('Adding mapping for user {} as {} to {}'.format(
+    logger.info('Adding mapping for user {} as {} to {}'.format(
         spec['arn'], spec['username'], spec['groups']))
 
     cm = API.read_namespaced_config_map('aws-auth', 'kube-system')
@@ -28,7 +28,7 @@ def create_mapping(body: dict, meta: dict, spec: dict, **kwargs):
 
 @kopf.on.update('iamauthenticator.k8s.aws', 'v1alpha1', 'iamidentitymappings')
 def update_mapping(body: dict, meta: dict, spec: dict, **kwargs):
-    print('Update mapping for user {} as {} to {}'.format(
+    logger.info('Update mapping for user {} as {} to {}'.format(
         spec['arn'], spec['username'], spec['groups']))
 
     cm = API.read_namespaced_config_map('aws-auth', 'kube-system')
@@ -39,7 +39,7 @@ def update_mapping(body: dict, meta: dict, spec: dict, **kwargs):
 
 @kopf.on.delete('iamauthenticator.k8s.aws', 'v1alpha1', 'iamidentitymappings')
 def delete_mapping(body: dict, meta: dict, spec: dict, **kwargs):
-    print('Delete mapping for user {} as {} to {}'.format(
+    logger.info('Delete mapping for user {} as {} to {}'.format(
         spec['arn'], spec['username'], spec['groups']))
 
     cm = API.read_namespaced_config_map('aws-auth', 'kube-system')
