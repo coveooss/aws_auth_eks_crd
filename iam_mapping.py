@@ -9,8 +9,8 @@ logger = logging.getLogger('operator')
 
 try:
     config.load_kube_config('./kubeconfig')
-except:
-    logger.info("Could not load kubeconfig")
+except Exception as e:
+    logger.info("Could not load kubeconfig. Error is : {}".format(e.message))
 
 API = client.CoreV1Api()
 
