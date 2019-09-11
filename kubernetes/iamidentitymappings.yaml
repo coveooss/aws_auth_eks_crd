@@ -20,10 +20,10 @@ spec:
       properties:
         spec:
           required:
-            - arn
+            - userarn
             - username
           properties:
-            arn:
+            userarn:
               type: string
             username:
               type: string

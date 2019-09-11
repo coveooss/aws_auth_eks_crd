@@ -10,7 +10,7 @@ logger = logging.getLogger('operator')
 try:
     config.load_kube_config('./kubeconfig')
 except Exception as e:
-    logger.info("Could not load kubeconfig. Error is : {}".format(e.message))
+    logger.info("Could not load kubeconfig. Error is : {}".format(e))
 
 API = client.CoreV1Api()
 
@@ -18,7 +18,7 @@ API = client.CoreV1Api()
 @kopf.on.create('iamauthenticator.k8s.aws', 'v1alpha1', 'iamidentitymappings')
 def create_mapping(body: dict, meta: dict, spec: dict, **kwargs):
     logger.info('Adding mapping for user {} as {} to {}'.format(
-        spec['arn'], spec['username'], spec['groups']))
+        spec['userarn'], spec['username'], spec['groups']))
 
     cm = API.read_namespaced_config_map('aws-auth', 'kube-system')
     users = get_user_mapping(cm)
@@ -29,7 +29,7 @@ def create_mapping(body: dict, meta: dict, spec: dict, **kwargs):
 @kopf.on.update('iamauthenticator.k8s.aws', 'v1alpha1', 'iamidentitymappings')
 def update_mapping(body: dict, meta: dict, spec: dict, **kwargs):
     logger.info('Update mapping for user {} as {} to {}'.format(
-        spec['arn'], spec['username'], spec['groups']))
+        spec['userarn'], spec['username'], spec['groups']))
 
     cm = API.read_namespaced_config_map('aws-auth', 'kube-system')
     users = get_user_mapping(cm)
@@ -40,7 +40,7 @@ def update_mapping(body: dict, meta: dict, spec: dict, **kwargs):
 @kopf.on.delete('iamauthenticator.k8s.aws', 'v1alpha1', 'iamidentitymappings')
 def delete_mapping(body: dict, meta: dict, spec: dict, **kwargs):
     logger.info('Delete mapping for user {} as {} to {}'.format(
-        spec['arn'], spec['username'], spec['groups']))
+        spec['userarn'], spec['username'], spec['groups']))
 
     cm = API.read_namespaced_config_map('aws-auth', 'kube-system')
     users = get_user_mapping(cm)
