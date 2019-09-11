@@ -1,0 +1,2 @@
+kubernetes
+kopf>=0.20

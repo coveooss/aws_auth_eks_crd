@@ -1,0 +1,9 @@
+apiVersion: iamauthenticator.k8s.aws/v1alpha1
+kind: IAMIdentityMapping
+metadata:
+  name: johndoe
+spec:
+  arn: arn:aws:iam::123456789:user/johndoe
+  username: johndoe
+  groups:
+    - system:masters
