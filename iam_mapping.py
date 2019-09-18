@@ -13,7 +13,7 @@ except Exception as e:
     logger.info("Could not load kubeconfig. Error is : {}".format(e))
 
 API = client.CoreV1Api()
-custom_objets_API = client.CustomObjectsApi()
+custom_objects_API = client.CustomObjectsApi()
 
 @kopf.on.update('iamauthenticator.k8s.aws', 'v1alpha1', 'iamidentitymappings')
 @kopf.on.create('iamauthenticator.k8s.aws', 'v1alpha1', 'iamidentitymappings')
@@ -43,7 +43,7 @@ def delete_mapping(body: dict, meta: dict, spec: dict, **kwargs):
 def full_synchronize():
     # Get Kubernetes' objects
     cm = API.read_namespaced_config_map('aws-auth', 'kube-system')
-    identity_mappings = custom_objets_API.list_cluster_custom_object('iamauthenticator.k8s.aws', 'v1alpha1', 'iamidentitymappings')
+    identity_mappings = custom_objects_API.list_cluster_custom_object('iamauthenticator.k8s.aws', 'v1alpha1', 'iamidentitymappings')
 
     users = get_user_mapping(cm)
     users = users if type(users) == "list" else list()
