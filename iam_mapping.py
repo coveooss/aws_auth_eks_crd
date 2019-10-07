@@ -48,11 +48,7 @@ def delete_mapping(body: dict, meta: dict, spec: dict, **kwargs):
 
 def deploy_crd_definition():
     with open("kubernetes/iamidentitymappings.yaml", 'r') as stream:
-        try:
-            body = yaml.safe_load(stream)
-        except yaml.YAMLError as exc:
-            logger.error(exc)
-            exit(1)
+        body = yaml.safe_load(stream)
     extensions_api = client.ApiextensionsV1beta1Api()
     crds = extensions_api.list_custom_resource_definition()
     crds_name = [x['metadata']['name'] for x in crds.to_dict()['items']]
