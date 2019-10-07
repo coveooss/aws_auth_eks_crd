@@ -1,6 +1,5 @@
 import kopf
 import yaml
-import json
 import copy
 import logging
 from kubernetes import client, config
@@ -54,8 +53,15 @@ def deploy_crd_definition():
         except yaml.YAMLError as exc:
             logger.error(exc)
             exit(1)
-    custom_objects_API.replace_cluster_custom_object(
-        GROUP, VERSION, PLURAL, 'iamidentitymappings.iamauthenticator.k8s.aws', json.dump(body))
+    extensions_api = client.ApiextensionsV1beta1Api()
+    crds = extensions_api.list_custom_resource_definition()
+    crds_name = [x['metadata']['name'] for x in crds.to_dict()['items']]
+    if body["metadata"]["name"] not in crds_name:
+        try:
+            extensions_api.create_custom_resource_definition(body)
+        except ValueError as err:
+            if not err.args[0] == 'Invalid value for `conditions`, must not be `None`':
+                raise err
 
 
 def full_synchronize():
