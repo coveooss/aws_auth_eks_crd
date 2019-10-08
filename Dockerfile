@@ -1,7 +1,6 @@
 FROM python:3.7-alpine
 
-ADD requirements.txt /app/
-ADD *.py /app/
+ADD . /app/
 
 RUN python -m pip install -U -r /app/requirements.txt
 
