@@ -23,6 +23,8 @@ spec:
       containers:
         - args:
             - --verbose
+            - --liveness=http://:8080/healthz
+            - --standalone
           image: coveo/aws-auth-operator:0.1
           imagePullPolicy: IfNotPresent
           name: operator
