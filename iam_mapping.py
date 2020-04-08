@@ -88,15 +88,6 @@ def deploy_crd_definition() -> None:
                 raise err
 
 
-@kopf.on.startup()
-def on_startup(logger: logger, **kwargs) -> None:
-    # Do a full synchronization at the start
-    logger.info("Deploy CRD definition")
-    deploy_crd_definition()
-    logger.info("Reconcile all existing ressources")
-    full_synchronize()
-
-
 def full_synchronize() -> None:
     # Get Kubernetes' objects
     cm = API.read_namespaced_config_map('aws-auth', 'kube-system')
@@ -142,3 +133,9 @@ def delete_user(user: dict, user_list: list) -> list:
         raise Exception(
             "Want to delete {}, but not found".format(user['username']))
     return user_list
+
+
+logger.info("Deploy CRD definition")
+deploy_crd_definition()
+logger.info("Reconcile all existing ressources")
+full_synchronize()
