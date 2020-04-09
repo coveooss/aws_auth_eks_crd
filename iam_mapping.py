@@ -9,11 +9,16 @@ from kubernetes.client.models.v1_config_map import V1ConfigMap
 logger = logging.getLogger('operator')
 
 try:
-    # config.load_kube_config('./kubeconfig')
     config.load_kube_config()
 except Exception as e:
     logger.info(
         "Could not load kubeconfig. Error is : {}.\nAssuming we are in a kubernetes cluster".format(e))
+    try:
+        config.load_incluster_config()
+    except Exception as e:
+        raise(Exception('No k8s config suitable, exiting ({})'.format(e)))
+else:
+    logging.info('Using Kubernetes local configuration')
 
 API = client.CoreV1Api()
 custom_objects_API = client.CustomObjectsApi()
@@ -49,6 +54,20 @@ def delete_mapping(body: dict, meta: dict, spec: dict, **kwargs) -> None:
     apply_mapping(cm, updated_mapping)
 
 
+@kopf.on.startup()
+def on_startup(logger: logger, **kwargs) -> None:
+    # Do a full synchronization at the start
+    logger.info("Deploy CRD definition")
+    deploy_crd_definition()
+    logger.info("Reconcile all existing ressources")
+    full_synchronize()
+
+
+@kopf.on.probe(id='sync')
+def get_monitoring_status(**kwargs) -> str:
+    return check_synchronization()
+
+
 def check_synchronization() -> str:
     cm = API.read_namespaced_config_map('aws-auth', 'kube-system')
     identity_mappings = custom_objects_API.list_cluster_custom_object(
@@ -62,16 +81,10 @@ def check_synchronization() -> str:
                     for im in identity_mappings["items"]]
 
     if (set(users_in_cm) == set(users_in_crd)):
-        raise Exception("monitoring check result : out-of-sync")
         return "in-sync"
     else:
         # Raise exception to make the monitoring probe fail
         raise Exception("monitoring check result : out-of-sync")
-
-
-@kopf.on.probe(id='sync')
-def get_monitoring_status(**kwargs) -> str:
-    return check_synchronization()
 
 
 def deploy_crd_definition() -> None:
@@ -133,9 +146,3 @@ def delete_user(user: dict, user_list: list) -> list:
         raise Exception(
             "Want to delete {}, but not found".format(user['username']))
     return user_list
-
-
-logger.info("Deploy CRD definition")
-deploy_crd_definition()
-logger.info("Reconcile all existing ressources")
-full_synchronize()
