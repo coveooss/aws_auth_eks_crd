@@ -64,11 +64,11 @@ def on_startup(logger: logger, **kwargs) -> None:
 
 
 @kopf.on.probe(id='sync')
-def get_monitoring_status(**kwargs) -> str:
+def get_monitoring_status(**kwargs) -> bool:
     return check_synchronization()
 
 
-def check_synchronization() -> str:
+def check_synchronization() -> bool:
     cm = API.read_namespaced_config_map('aws-auth', 'kube-system')
     identity_mappings = custom_objects_API.list_cluster_custom_object(
         GROUP, VERSION, PLURAL)
@@ -81,7 +81,7 @@ def check_synchronization() -> str:
                     for im in identity_mappings["items"]]
 
     if (set(users_in_cm) == set(users_in_crd)):
-        return "in-sync"
+        return True
     else:
         # Raise exception to make the monitoring probe fail
         raise Exception("monitoring check result : out-of-sync")
