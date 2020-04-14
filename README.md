@@ -4,7 +4,7 @@ So here is an operator to handle userRole.
 
 ## Test Operator
 
-```kopf run --dev --debug --standalone iam_mapping.py```
+```kopf run --dev --debug --standalone --liveness=http://:8080/healthz iam_mapping.py```
 
 ## Usage
 
