@@ -34,12 +34,14 @@ async def create_mapping(body: dict, meta: dict, spec: dict, event: str, diff: s
     if len(diff) < 1:
         return dict()
 
+    sanitize_spec = dict(spec)
+
     logger.info('{} mapping for user {} as {} to {}'.format(
         event.title(), spec['userarn'], spec['username'], spec['groups']))
 
     cm = API.read_namespaced_config_map('aws-auth', 'kube-system')
     users = get_user_mapping(cm)
-    updated_mapping = ensure_user(spec, users)
+    updated_mapping = ensure_user(sanitize_spec, users)
     apply_mapping(cm, updated_mapping)
 
 
@@ -120,7 +122,7 @@ def get_user_mapping(cm: V1ConfigMap) -> list:
         return []
 
 
-def apply_mapping(existing_cm: V1ConfigMap, user_mapping: dict) -> None:
+def apply_mapping(existing_cm: V1ConfigMap, user_mapping: list) -> None:
     existing_cm.data["mapUsers"] = yaml.safe_dump(user_mapping)
     API.patch_namespaced_config_map('aws-auth', 'kube-system', existing_cm)
 
