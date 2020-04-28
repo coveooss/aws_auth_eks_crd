@@ -42,18 +42,18 @@ async def create_mapping(body: dict, meta: dict, spec: dict, event: str, diff: s
     cm = API.read_namespaced_config_map('aws-auth', 'kube-system')
     users = get_user_mapping(cm)
     updated_mapping = ensure_user(sanitize_spec, users)
-    apply_mapping(cm, updated_mapping)
+    await apply_mapping(cm, updated_mapping)
 
 
 @kopf.on.delete(GROUP, VERSION, PLURAL)
-def delete_mapping(body: dict, meta: dict, spec: dict, **kwargs) -> None:
+async def delete_mapping(body: dict, meta: dict, spec: dict, **kwargs) -> None:
     logger.info('Delete mapping for user {} as {} to {}'.format(
         spec['userarn'], spec['username'], spec['groups']))
 
     cm = API.read_namespaced_config_map('aws-auth', 'kube-system')
     users = get_user_mapping(cm)
     updated_mapping = delete_user(spec, users)
-    apply_mapping(cm, updated_mapping)
+    await apply_mapping(cm, updated_mapping)
 
 
 @kopf.on.startup()
