@@ -13,10 +13,9 @@ spec:
     kind: IAMIdentityMapping
     categories:
       - all
-  subresources:
-    status: {}
   validation:
     openAPIV3Schema:
+      type: object
       properties:
         spec:
           required:

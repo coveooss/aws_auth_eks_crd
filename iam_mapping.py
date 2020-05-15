@@ -94,13 +94,19 @@ def deploy_crd_definition() -> None:
         body = yaml.safe_load(stream)
     extensions_api = client.ApiextensionsV1beta1Api()
     crds = extensions_api.list_custom_resource_definition()
-    crds_name = [x['metadata']['name'] for x in crds.to_dict()['items']]
-    if body["metadata"]["name"] not in crds_name:
+    crds_name = {x['metadata']['name']: x['metadata']
+                 ['resource_version']for x in crds.to_dict()['items']}
+    crd_name = body["metadata"]["name"]
+    if crd_name not in crds_name.keys():
         try:
             extensions_api.create_custom_resource_definition(body)
         except ValueError as err:
             if not err.args[0] == 'Invalid value for `conditions`, must not be `None`':
                 raise err
+    else:
+        body["metadata"]["resourceVersion"] = crds_name[crd_name]
+        extensions_api.replace_custom_resource_definition(
+            crd_name, body)
 
 
 def full_synchronize() -> None:
@@ -122,7 +128,7 @@ def get_user_mapping(cm: V1ConfigMap) -> list:
         return []
 
 
-def apply_mapping(existing_cm: V1ConfigMap, user_mapping: list) -> None:
+async def apply_mapping(existing_cm: V1ConfigMap, user_mapping: list) -> None:
     existing_cm.data["mapUsers"] = yaml.safe_dump(user_mapping)
     API.patch_namespaced_config_map('aws-auth', 'kube-system', existing_cm)
 
@@ -145,6 +151,6 @@ def delete_user(user: dict, user_list: list) -> list:
             del user_list[i]
             return user_list
     else:
-        raise Exception(
+        logger.warning(
             "Want to delete {}, but not found".format(user['username']))
     return user_list
