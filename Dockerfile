@@ -1,6 +1,6 @@
 FROM python:3.8-alpine
 
-RUN apk add build-base
+RUN apk update --no-cache && apk upgrade --no-cache && apk add build-base
 ADD . /app/
 RUN python -m pip install -U -r /app/requirements.txt
 
