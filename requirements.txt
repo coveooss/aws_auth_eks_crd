@@ -1,2 +1,2 @@
 kubernetes
-kopf>=0.20
+kopf==0.28.3
