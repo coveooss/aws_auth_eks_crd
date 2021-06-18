@@ -1,0 +1,9 @@
+apiVersion: iamauthenticator.k8s.aws/v1alpha1
+kind: IAMIdentityMapping
+metadata:
+  name: sdm-csec-admin
+spec:
+  arn: arn:aws:iam::123456789:role/sdm-eks-csec-admin
+  username: sdm-csec-admin
+  groups:
+    - user-group-csec-admin
