@@ -24,6 +24,9 @@ spec:
           - required:
             - arn
             - username
+          - required:
+            - rolearn
+            - username
           properties:
             arn:
               type: string
@@ -32,6 +35,8 @@ spec:
                 type: string
               type: array
             userarn:
+              type: string
+            rolearn:
               type: string
             username:
               type: string
