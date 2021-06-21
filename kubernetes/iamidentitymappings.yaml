@@ -22,14 +22,9 @@ spec:
             - userarn
             - username
           - required:
-            - arn
-            - username
-          - required:
             - rolearn
             - username
           properties:
-            arn:
-              type: string
             groups:
               items:
                 type: string
