@@ -3,7 +3,7 @@ kind: IAMIdentityMapping
 metadata:
   name: sdm-namespace-admin
 spec:
-  rolearn: arn:aws:iam::123456789:role/sdm-eks-namespace-admin
+  rolearn: arn:aws:iam::000000000000:role/sdm-eks-namespace-admin
   username: sdm-namespace-admin
   groups:
     - user-group-namespace-admin

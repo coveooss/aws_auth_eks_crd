@@ -1,2 +1,0 @@
-kubernetes
-kopf==0.28.3
