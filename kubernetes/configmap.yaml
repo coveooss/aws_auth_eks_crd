@@ -7,13 +7,13 @@ metadata:
   labels:
     k8s-app: aws-iam-authenticator
 data:
-  mapRoles:
-  - roleARN: arn:aws:iam::000000000000:role/KubernetesAdmin
-    username: kubernetes-admin
-    groups:
-    - system:masters
-  mapUsers:
-  - userARN: arn:aws:iam::000000000000:user/Alice
-    username: alice
-    groups:
-    - system:masters
+  mapRoles: |
+    - roleARN: arn:aws:iam::000000000000:role/KubernetesAdmin
+      username: kubernetes-admin
+      groups:
+      - system:masters
+  mapUsers: |
+    - userARN: arn:aws:iam::000000000000:user/Alice
+      username: alice
+      groups:
+      - system:masters

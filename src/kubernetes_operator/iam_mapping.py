@@ -33,10 +33,10 @@ async def create_mapping(spec: dict, diff: list, **kwargs) -> None:
     # Do nothing when we have no diff
     if len(diff) < 1:
         return dict()
-    logging.info(spec)
-    logging.info(diff)
+
     sanitize_spec = dict(spec)
     cm = API.read_namespaced_config_map("aws-auth", "kube-system")
+
     if spec.get("userarn") is not None:
         logger.info("Mapping for user %s as %s to %s",
                     spec["userarn"], spec["username"], spec["groups"])
