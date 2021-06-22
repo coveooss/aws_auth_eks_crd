@@ -25,26 +25,6 @@ pytest-cov = "^2.12.1"
 PyYAML = "^5.4.1"
 vulture = "^2.3"
 
-[tool.stew.ci]
-black = true
-mypy = true
-offline-build = false
-poetry-check = true
-pytest = true
-
-[tool.stew.ci.custom-runners]
-bandit = { args = ["-r", "admission_controller"] }
-pycodestyle = { args = ["--max-line-length=120", "--ignore=E203,W503,E721", "."] }
-pydocstyle = { args = ["admission_controller"] }
-pylint = { args = ["--disable=missing-docstring,bad-continuation,broad-except,fixme", "admission_controller", "tests"] }
-vulture = { args = ["admission_controller", "tests"] }
-
-[tool.black]
-line-length = 120
-
-[tool.pydocstyle]
-ignore = "D104,D105,D107,D202,D203,D213,D400"
-
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

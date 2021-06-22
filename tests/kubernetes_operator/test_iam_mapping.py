@@ -1,4 +1,5 @@
 import asyncio
+import copy
 from unittest import mock
 from unittest.mock import patch, MagicMock
 
@@ -49,9 +50,13 @@ CONFIGMAP = client.V1ConfigMap(
     metadata=METADATA
 )
 
-SPEC1 = {'groups': ['system:masters'], 'userarn': 'arn:aws:iam::000000000000:user/mark', 'username': 'mark'}
-DIFF1 = [('add', (), None, {'spec': {'groups': ['system:masters'], 'userarn': 'arn:aws:iam::000000000000:user/mark',
-                                     'username': 'mark'}})]
+SPEC1 = {"groups": ["system:masters"], "userarn": "arn:aws:iam::000000000000:user/mark", "username": "mark"}
+DIFF1 = [("add", (), None, {"spec": {"groups": ["system:masters"], "userarn": "arn:aws:iam::000000000000:user/mark",
+                                     "username": "mark"}})]
+SPEC2 = {"groups": ["system:masters"], "rolearn": "arn:aws:iam::000000000000:role/sdm-eks-role", "username": "sdm-role"}
+DIFF2 = [("add", (), None, {"spec": {
+    "groups": ["system:masters"], "rolearn": "arn:aws:iam::000000000000:role/sdm-eks-role",
+    "username": "sdm-role"}})]
 
 
 @pytest.fixture
@@ -66,8 +71,27 @@ def run_sync(coroutine):
 
 
 def test_create_mapping_userarn(api_client):
+    expected_conf_map = copy.deepcopy(CONFIGMAP)
     run_sync(iam_mapping.create_mapping(spec=SPEC1, diff=DIFF1))
 
-    CONFIGMAP.data["mapUsers"] = [{'groups': ['system:masters'], 'userarn': 'arn:aws:iam::000000000000:user/johndoe'},
-                                  {'groups': ['system:masters'], 'userarn': 'arn:aws:iam::000000000000:user/mark'}]
-    api_client.patch_namespaced_config_map.assert_called_with("aws-auth", "kube-system", CONFIGMAP)
+    expected_conf_map.data["mapUsers"] = yaml.safe_dump([
+        {"groups": ["system:masters"], "userarn": "arn:aws:iam::000000000000:user/johndoe", "username": "johndoe"},
+        {"groups": ["system:masters"], "userarn": "arn:aws:iam::000000000000:user/mark", "username": "mark"}])
+    actual_configmap = api_client.patch_namespaced_config_map.call_args_list[0].args[2]
+    assert expected_conf_map.to_dict() == actual_configmap.to_dict()
+
+
+def test_create_mapping_rolearn(api_client):
+    expected_conf_map = copy.deepcopy(CONFIGMAP)
+    run_sync(iam_mapping.create_mapping(spec=SPEC2, diff=DIFF2))
+
+    expected_conf_map.data["mapRoles"] = yaml.safe_dump([{"groups": ["user-group-namespace-admin"],
+                                                          "rolearn": "arn:aws:iam::000000000000:role/sdm-eks"
+                                                                     "-namespace-admin",
+                                                          "username":"sdm-namespace-admin"},
+
+                                                         {"groups": ["system:masters"],
+                                                          "rolearn": "arn:aws:iam::000000000000:role/sdm-eks-role",
+                                                          "username":"sdm-role"}])
+    actual_configmap = api_client.patch_namespaced_config_map.call_args_list[0].args[2]
+    assert expected_conf_map.to_dict() == actual_configmap.to_dict()
