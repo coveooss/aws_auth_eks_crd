@@ -30,7 +30,7 @@ You can also test the operator locally in a minikube context.
 1. Create a test config-map `kubectl apply -f kubernetes/test/configmap.yaml`
 2. Start the operator in minikube `kopf run --dev --debug --standalone --liveness=http://:8080/healthz src/kubernetes_operator/iam_mapping.py`
 3. Create, in a different terminal, an IamIdentityMapping `kubectl apply -f kubernetes/test/test-iam-rolearn.yaml`
-4. Verify the change was applied in the configmap with `kubectl get cm -n kube-system aws-auth -o yaml`
+4. Verify the change is applied by the operator in the configmap with `kubectl get cm -n kube-system aws-auth -o yaml`
 
 ## Usage
 
