@@ -14,7 +14,7 @@ DATA = {
     "mapRoles": "- groups:\n  - user-group-namespace-admin\n  rolearn: "
     "arn:aws:iam::000000000000:role/sdm-eks-namespace-admin\n  username: sdm-namespace-admin\n",
     "mapUsers": "- groups:\n  - system:masters\n  userarn: arn:aws:iam::000000000000:user/johndoe\n  username: "
-    "johndoe\n ",
+    "johndoe\n",
 }
 METADATA = {
     "annotations": {
@@ -29,7 +29,7 @@ METADATA = {
         '"annotations":{},"labels":{'
         '"k8s-app":"aws-iam-authenticator"},'
         '"name":"aws-auth",'
-        '"namespace":"kube-system"}}\n '
+        '"namespace":"kube-system"}}\n'
     },
     "creationTimestamp": "2021-06-22T19:23:37Z",
     "labels": {"k8s-app": "aws-iam-authenticator"},
@@ -80,6 +80,7 @@ def run_sync(coroutine):
 
 def test_create_mapping_userarn(api_client):
     expected_conf_map = copy.deepcopy(CONFIGMAP)
+
     run_sync(iam_mapping.create_mapping(spec=SPEC1, diff=DIFF1))
 
     expected_conf_map.data["mapUsers"] = yaml.safe_dump(
@@ -94,6 +95,7 @@ def test_create_mapping_userarn(api_client):
 
 def test_create_mapping_rolearn(api_client):
     expected_conf_map = copy.deepcopy(CONFIGMAP)
+
     run_sync(iam_mapping.create_mapping(spec=SPEC2, diff=DIFF2))
 
     expected_conf_map.data["mapRoles"] = yaml.safe_dump(
@@ -121,6 +123,7 @@ def test_delete_mapping_userarn(api_client):
         "userarn": "arn:aws:iam::000000000000:user/johndoe",
         "username": "johndoe",
     }
+
     run_sync(iam_mapping.delete_mapping(spec=johndoe_spec))
 
     expected_conf_map.data["mapUsers"] = yaml.safe_dump([])
@@ -135,6 +138,7 @@ def test_delete_mapping_rolearn(api_client):
         "rolearn": "arn:aws:iam::000000000000:role/sdm-eks-namespace-admin",
         "username": "sdm-namespace-admin",
     }
+
     run_sync(iam_mapping.delete_mapping(spec=sdm_eks_admin_spec))
 
     expected_conf_map.data["mapRoles"] = yaml.safe_dump([])

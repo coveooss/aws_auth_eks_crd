@@ -45,20 +45,13 @@ async def create_mapping(spec: dict, diff: list, **_) -> None:
         sanitize_spec = dict(spec)
         configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
 
-        # If it is a user mapping
         if spec.get("userarn") is not None:
             logger.info("Mapping for user %s as %s to %s", spec["userarn"], spec["username"], spec["groups"])
-
-            users = get_user_mapping(configmap)
-            updated_mapping = ensure_identity(sanitize_spec, users)
-            await apply_user_mapping(configmap, updated_mapping)
-        # Else it is a role mapping
         else:
             logger.info("Mapping for user %s as %s to %s", spec["rolearn"], spec["username"], spec["groups"])
-
-            roles = get_role_mapping(configmap)
-            updated_mapping = ensure_identity(sanitize_spec, roles)
-            await apply_role_mapping(configmap, updated_mapping)
+        identities = get_identity_mappings(configmap)
+        updated_mapping = ensure_identity(sanitize_spec, identities)
+        await apply_identity_mappings(configmap, updated_mapping)
 
 
 @kopf.on.delete(GROUP, VERSION, PLURAL)
@@ -67,20 +60,16 @@ async def delete_mapping(spec: dict, **_) -> None:
 
     :param spec: The spec of the removed IdentityMapping
     """
-
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
-    # If it is a user mapping
+
     if spec.get("userarn") is not None:
         logger.info("Delete mapping for user %s as %s to %s", spec["userarn"], spec["username"], spec["groups"])
-        users = get_user_mapping(configmap)
-        updated_mapping = delete_identity(spec, users)
-        await apply_user_mapping(configmap, updated_mapping)
-    # Else it is a role mapping
     else:
         logger.info("Delete mapping for user %s as %s to %s", spec["rolearn"], spec["username"], spec["groups"])
-        roles = get_role_mapping(configmap)
-        updated_mapping = delete_identity(spec, roles)
-        await apply_role_mapping(configmap, updated_mapping)
+
+    identity_mappings = get_identity_mappings(configmap)
+    updated_mappings = delete_identity(spec, identity_mappings)
+    await apply_identity_mappings(configmap, updated_mappings)
 
 
 @kopf.on.startup()
@@ -89,7 +78,7 @@ def on_startup(logger, **_) -> None:
     # Do a full synchronization at the start
     logger.info("Deploy CRD definition")
     deploy_crd_definition()
-    logger.info("Reconcile all existing ressources")
+    logger.info("Reconcile all existing resources")
     full_synchronize()
 
 
@@ -100,23 +89,17 @@ def get_monitoring_status(**_) -> bool:
 
 
 def check_synchronization() -> bool:
-    """Create/update a mapping in aws-auth for a IdentityMapping.
+    """Compare configmap to CRDs and return if they are in sync."""
 
-    This method accepts mappings for userarn and rolearn with groups.
-
-    :param spec: The spec of the changed identity
-    :param diff: The diff created by the changed identity
-    """
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
     identity_mappings = custom_objects_API.list_cluster_custom_object(GROUP, VERSION, PLURAL)
+    identities_in_crd = [im["spec"]["username"] for im in identity_mappings["items"]]
 
-    users_in_cm = get_user_mapping(configmap)
-    users_in_cm = users_in_cm if isinstance(users_in_cm, list) else list()
-    users_in_cm = [u["username"] for u in users_in_cm]
+    identities_in_cm = get_identity_mappings(configmap)
+    identities_in_cm = identities_in_cm if isinstance(identities_in_cm, list) else list()
+    identities_in_cm = [u["username"] for u in identities_in_cm]
 
-    users_in_crd = [im["spec"]["username"] for im in identity_mappings["items"]]
-
-    if set(users_in_cm) == set(users_in_crd):
+    if set(identities_in_cm) == set(identities_in_crd):
         return True
 
     # Raise exception to make the monitoring probe fail
@@ -148,46 +131,49 @@ def full_synchronize() -> None:
     # Get Kubernetes" objects
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
     identity_mappings = custom_objects_API.list_cluster_custom_object(GROUP, VERSION, PLURAL)
-    users = get_user_mapping(configmap)
-    users = users if isinstance(users, list) else list()
+    identities = get_identity_mappings(configmap)
+    identities = identities if isinstance(identities, list) else list()
+
     for identity_mapping in identity_mappings["items"]:
-        users = ensure_identity(identity_mapping["spec"], users)
-    apply_user_mapping(configmap, users)
+        identities = ensure_identity(identity_mapping["spec"], identities)
+
+    apply_identity_mappings(configmap, identities)
 
 
-def get_user_mapping(configmap: V1ConfigMap) -> list:
-    """Get the user map from aws-auth."""
+def get_identity_mappings(configmap: V1ConfigMap) -> list:
+    """Get the identity mappings from the aws-auth configmap as a list.
+
+    :return identities: The combined user and role mapping list
+    """
     try:
-        return yaml.safe_load(configmap.data["mapUsers"])
-    except yaml.YAMLError:
+        identities = []
+        identities.extend(yaml.safe_load(configmap.data["mapUsers"]))
+        identities.extend(yaml.safe_load(configmap.data["mapRoles"]))
+
+        return identities
+    except yaml.YAMLError as yaml_error:
+        logger.warning("Error loading configmap mappings: %s", yaml_error)
         return []
 
 
-def get_role_mapping(configmap: V1ConfigMap) -> list:
-    """Get the role map from aws-auth."""
-    try:
-        return yaml.safe_load(configmap.data["mapRoles"])
-    except yaml.YAMLError:
-        return []
-
-
-async def apply_user_mapping(existing_cm: V1ConfigMap, user_mapping: list) -> None:
-    """Apply a new user mapping to override the existing aws-auth mapping.
+async def apply_identity_mappings(existing_cm: V1ConfigMap, identity_mappings: list) -> None:
+    """Apply a new identity mapping to override the existing aws-auth mapping.
 
     :param existing_cm: The current configmap
-    :param user_mapping: The new user mapping list
+    :param identity_mappings: The new identity mapping list
     """
-    existing_cm.data["mapUsers"] = yaml.safe_dump(user_mapping)
-    API.patch_namespaced_config_map("aws-auth", "kube-system", existing_cm)
+    user_mappings = []
+    role_mappings = []
+    for identity_mapping in identity_mappings:
+        if identity_mapping.get("userarn") is not None:
+            user_mappings.append(identity_mapping)
+        elif identity_mapping.get("rolearn") is not None:
+            role_mappings.append(identity_mapping)
+        else:
+            logger.info("Unrecognized mapping. Skipping %s", identity_mapping)
 
-
-async def apply_role_mapping(existing_cm: V1ConfigMap, role_mapping: list) -> None:
-    """Apply a new role mapping to override the existing aws-auth mapping.
-
-    :param existing_cm: The current configmap
-    :param user_mapping: The new role mapping list
-    """
-    existing_cm.data["mapRoles"] = yaml.safe_dump(role_mapping)
+    existing_cm.data["mapUsers"] = yaml.safe_dump(user_mappings)
+    existing_cm.data["mapRoles"] = yaml.safe_dump(role_mappings)
     API.patch_namespaced_config_map("aws-auth", "kube-system", existing_cm)
 
 
