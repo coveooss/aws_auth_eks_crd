@@ -22,6 +22,16 @@ Every commit will be checked against all linters with pre-commit. If it fails, s
 
 ```kopf run --dev --debug --standalone --liveness=http://:8080/healthz src/kubernetes_operator/iam_mapping.py```
 
+You can also test the operator locally in a minikube context.
+
+| WARNING: Make sure you change your context to minikube before doing these commands. |
+| --- |
+
+1. Create a test config-map `kubectl apply -f kubernetes/test/configmap.yaml`
+2. Start the operator in minikube `kopf run --dev --debug --standalone --liveness=http://:8080/healthz src/kubernetes_operator/iam_mapping.py`
+3. Create, in a different terminal, an IamIdentityMapping `kubectl apply -f kubernetes/test/test-iam-rolearn.yaml`
+4. Verify the change was applied in the configmap with `kubectl get cm -n kube-system aws-auth -o yaml`
+
 ## Usage
 
 ### Deploy CRD definition

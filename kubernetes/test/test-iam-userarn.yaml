@@ -7,3 +7,4 @@ spec:
   username: johndoe
   groups:
     - system:masters
+    - some-other-group-namespace-admin
