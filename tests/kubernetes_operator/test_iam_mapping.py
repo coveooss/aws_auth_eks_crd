@@ -10,7 +10,7 @@ import src.kubernetes_operator.iam_mapping as iam_mapping
 
 BASE_PATH = "src.kubernetes_operator.iam_mapping"
 
-CONFIG_MAP_DATA = {
+DATA = {
     "mapRoles": "- groups:\n  - user-group-namespace-admin\n  rolearn: "
     "arn:aws:iam::000000000000:role/sdm-eks-namespace-admin\n  username: sdm-namespace-admin\n",
     "mapUsers": "- groups:\n  - system:masters\n  userarn: arn:aws:iam::000000000000:user/johndoe\n  username: "
@@ -39,7 +39,7 @@ METADATA = {
     "uid": "eba376b5-cb10-4fe3-9199-4c602a85e0c7",
 }
 
-CONFIGMAP = client.V1ConfigMap(api_version="v1", kind="ConfigMap", data=CONFIG_MAP_DATA, metadata=METADATA)
+CONFIGMAP = client.V1ConfigMap(api_version="v1", kind="ConfigMap", data=DATA, metadata=METADATA)
 
 SPEC1 = {"groups": ["system:masters"], "userarn": "arn:aws:iam::000000000000:user/mark", "username": "mark"}
 DIFF1 = [
@@ -110,5 +110,33 @@ def test_create_mapping_rolearn(api_client):
             },
         ]
     )
+    actual_configmap = api_client.patch_namespaced_config_map.call_args_list[0].args[2]
+    assert expected_conf_map.to_dict() == actual_configmap.to_dict()
+
+
+def test_delete_mapping_userarn(api_client):
+    expected_conf_map = copy.deepcopy(CONFIGMAP)
+    johndoe_spec = {
+        "groups": ["system:masters"],
+        "userarn": "arn:aws:iam::000000000000:user/johndoe",
+        "username": "johndoe",
+    }
+    run_sync(iam_mapping.delete_mapping(spec=johndoe_spec))
+
+    expected_conf_map.data["mapUsers"] = yaml.safe_dump([])
+    actual_configmap = api_client.patch_namespaced_config_map.call_args_list[0].args[2]
+    assert expected_conf_map.to_dict() == actual_configmap.to_dict()
+
+
+def test_delete_mapping_rolearn(api_client):
+    expected_conf_map = copy.deepcopy(CONFIGMAP)
+    sdm_eks_admin_spec = {
+        "groups": ["user-group-namespace-admin"],
+        "rolearn": "arn:aws:iam::000000000000:role/sdm-eks-namespace-admin",
+        "username": "sdm-namespace-admin",
+    }
+    run_sync(iam_mapping.delete_mapping(spec=sdm_eks_admin_spec))
+
+    expected_conf_map.data["mapRoles"] = yaml.safe_dump([])
     actual_configmap = api_client.patch_namespaced_config_map.call_args_list[0].args[2]
     assert expected_conf_map.to_dict() == actual_configmap.to_dict()
