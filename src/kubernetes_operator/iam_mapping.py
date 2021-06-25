@@ -171,7 +171,7 @@ async def apply_identity_mappings(existing_cm: V1ConfigMap, identity_mappings: l
         elif identity_mapping.get("rolearn") is not None:
             role_mappings.append(identity_mapping)
         else:
-            logger.info("Unrecognized mapping. Skipping %s", identity_mapping)
+            logger.warning("Unrecognized mapping. Skipping %s", identity_mapping)
 
     existing_cm.data["mapUsers"] = yaml.safe_dump(user_mappings)
     existing_cm.data["mapRoles"] = yaml.safe_dump(role_mappings)

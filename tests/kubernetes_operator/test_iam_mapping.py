@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from unittest.mock import patch, MagicMock
 
 import pytest
@@ -171,3 +172,56 @@ def test_full_synchronize(mock_apply_identity_mappings, api_client, custom_objec
     mock_apply_identity_mappings.assert_called_with(CONFIGMAP, [SPEC_USER_JOHNDOE, SPEC_CSEC_ADMIN])
     api_client.read_namespaced_config_map.assert_called_with("aws-auth", "kube-system")
     custom_objects_api.list_cluster_custom_object.assert_called_with(GROUP, VERSION, PLURAL)
+
+
+def test_apply_identity_mappings_with_userarn(api_client):
+    run_sync(iam_mapping.apply_identity_mappings(CONFIGMAP, [SPEC_USER_JOHNDOE]))
+
+    expected_cm_data = {"mapRoles": yaml.safe_dump([]), "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE])}
+    expected_configmap = client.V1ConfigMap(
+        api_version="v1", kind="ConfigMap", data=expected_cm_data, metadata={"key": "some_metadata"}
+    )
+    api_client.patch_namespaced_config_map.assert_called_with("aws-auth", "kube-system", expected_configmap)
+
+
+def test_apply_identity_mappings_with_rolearn(api_client):
+    run_sync(iam_mapping.apply_identity_mappings(CONFIGMAP, [SPEC_CSEC_ADMIN]))
+
+    expected_cm_data = {"mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN]), "mapUsers": yaml.safe_dump([])}
+    expected_configmap = client.V1ConfigMap(
+        api_version="v1", kind="ConfigMap", data=expected_cm_data, metadata={"key": "some_metadata"}
+    )
+    api_client.patch_namespaced_config_map.assert_called_with("aws-auth", "kube-system", expected_configmap)
+
+
+def test_apply_identity_mappings_with_unknown_mapping(api_client, caplog):
+    caplog.set_level(logging.WARNING)
+    some_unknown_spec = {"groups": ["system:masters"], "arn": "arn:aws:iam::000000000000:user/bob", "username": "bob"}
+
+    run_sync(iam_mapping.apply_identity_mappings(CONFIGMAP, [some_unknown_spec]))
+
+    expected_cm_data = {"mapRoles": yaml.safe_dump([]), "mapUsers": yaml.safe_dump([])}
+    expected_configmap = client.V1ConfigMap(
+        api_version="v1", kind="ConfigMap", data=expected_cm_data, metadata={"key": "some_metadata"}
+    )
+    api_client.patch_namespaced_config_map.assert_called_with("aws-auth", "kube-system", expected_configmap)
+
+    assert caplog.messages
+    for message in caplog.messages:
+        assert message.find("Unrecognized mapping.") != -1
+
+
+def test_apply_identity_mappings_with_userarn_and_rolearn_and_unknown_mapping(api_client, caplog):
+    caplog.set_level(logging.WARNING)
+    some_unknown_spec = {"groups": ["system:masters"], "arn": "arn:aws:iam::000000000000:user/bob", "username": "bob"}
+
+    run_sync(iam_mapping.apply_identity_mappings(CONFIGMAP, [SPEC_USER_JOHNDOE, SPEC_CSEC_ADMIN, some_unknown_spec]))
+
+    expected_cm_data = {"mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN]), "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE])}
+    expected_configmap = client.V1ConfigMap(
+        api_version="v1", kind="ConfigMap", data=expected_cm_data, metadata={"key": "some_metadata"}
+    )
+    api_client.patch_namespaced_config_map.assert_called_with("aws-auth", "kube-system", expected_configmap)
+    assert caplog.messages
+    for message in caplog.messages:
+        assert message.find("Unrecognized mapping.") != -1
