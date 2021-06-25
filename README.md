@@ -1,7 +1,7 @@
 # CRD controller for AWS EKS Authenticator
 [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) recently introduced the possibility to use custom resources to configure roles and user bindings.
 However, this version of the app is not available in EKS and is not planned to [at this moment](https://github.com/aws/containers-roadmap/issues/550).
-So here is an operator to reflect changes in IamIdentityMappings in the aws-auth configmap.
+So here is an operator to reflect IamIdentityMappings changes in the aws-auth configmap.
 
 ## Get started
 1. Install [poetry](https://python-poetry.org/)

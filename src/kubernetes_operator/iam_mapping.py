@@ -32,11 +32,11 @@ PLURAL = "iamidentitymappings"
 @kopf.on.update(GROUP, VERSION, PLURAL)
 @kopf.on.create(GROUP, VERSION, PLURAL)
 async def create_mapping(spec: dict, diff: list, **_) -> None:
-    """Create/update a mapping in aws-auth for a IdentityMapping.
+    """Create/update an identity mapping in the aws-auth configmap with the corresponding IamIdentityMapping.
 
     This method accepts mappings for userarn and rolearn with groups.
 
-    :param spec: The spec of the changed identity
+    :param spec: The spec of the changed IamIdentityMapping
     :param diff: The diff created by the changed identity
     """
 
@@ -56,9 +56,9 @@ async def create_mapping(spec: dict, diff: list, **_) -> None:
 
 @kopf.on.delete(GROUP, VERSION, PLURAL)
 async def delete_mapping(spec: dict, **_) -> None:
-    """Delete a mapping in aws-auth after deletion of an IdentityMapping.
+    """Delete the identity mapping in the aws-auth configmap corresponding to the deleted IamIdentityMapping.
 
-    :param spec: The spec of the removed IdentityMapping
+    :param spec: The spec of the removed IamIdentityMapping
     """
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
 
@@ -84,12 +84,12 @@ def on_startup(logger, **_) -> None:
 
 @kopf.on.probe(id="sync")
 def get_monitoring_status(**_) -> bool:
-    """Check if the aws-auth mappings are in sync with the IamIdentityMappings."""
+    """Check if the aws-auth configmap mappings are in sync with the IamIdentityMappings."""
     return check_synchronization()
 
 
 def check_synchronization() -> bool:
-    """Compare configmap to CRDs and return if they are in sync."""
+    """Compare the aws-auth configmap to the IamIdentityMappings and return if they are in sync."""
 
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
     identity_mappings = custom_objects_API.list_cluster_custom_object(GROUP, VERSION, PLURAL)
@@ -107,7 +107,7 @@ def check_synchronization() -> bool:
 
 
 def deploy_crd_definition() -> None:
-    """Deploy the CRD located in kubernetes/."""
+    """Deploy the CRD (IamIdentityMapping) located in kubernetes/."""
     crd_file_path = get_project_root() / "kubernetes/iamidentitymappings.yaml"
     with open(crd_file_path.resolve(), "r") as stream:
         body = yaml.safe_load(stream)
@@ -127,7 +127,7 @@ def deploy_crd_definition() -> None:
 
 
 def full_synchronize() -> None:
-    """Synchronize all aws-auth mappings with existing IamIdentityMappings."""
+    """Synchronize all aws-auth configmap mappings with existing IamIdentityMappings."""
     # Get Kubernetes" objects
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
     identity_mappings = custom_objects_API.list_cluster_custom_object(GROUP, VERSION, PLURAL)
@@ -158,10 +158,10 @@ def get_identity_mappings(configmap: V1ConfigMap) -> list:
 
 
 async def apply_identity_mappings(existing_cm: V1ConfigMap, identity_mappings: list) -> None:
-    """Apply a new identity mapping to override the existing aws-auth mapping.
+    """Apply new identity mappings to override the existing aws-auth mapping.
 
     :param existing_cm: The current configmap
-    :param identity_mappings: The new identity mapping list
+    :param identity_mappings: The new identity mappings
     """
     user_mappings = []
     role_mappings = []
@@ -214,7 +214,7 @@ def delete_identity(identity: dict, identity_list: list) -> list:
 def get_project_root() -> Path:
     """Return the root folder.
 
-    If the utils file is moved, this relative path NEEDS to be changed accordingly.
+    If this file is moved, this relative path NEEDS to be changed accordingly.
 
     :return path: The path object at the root of the project
     """
