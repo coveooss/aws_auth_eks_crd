@@ -45,10 +45,9 @@ async def create_mapping(spec: dict, diff: list, **_) -> None:
         sanitize_spec = dict(spec)
         configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
 
-        if spec.get("userarn") is not None:
-            logger.info("Mapping for user %s as %s to %s", spec["userarn"], spec["username"], spec["groups"])
-        else:
-            logger.info("Mapping for user %s as %s to %s", spec["rolearn"], spec["username"], spec["groups"])
+        arn_field = spec["userarn"] if spec.get("userarn") else spec["rolearn"]
+        logger.info("Mapping for user %s as %s to %s", arn_field, spec["username"], spec["groups"])
+
         identities = get_identity_mappings(configmap)
         updated_mapping = ensure_identity(sanitize_spec, identities)
         await apply_identity_mappings(configmap, updated_mapping)
@@ -62,10 +61,8 @@ async def delete_mapping(spec: dict, **_) -> None:
     """
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
 
-    if spec.get("userarn") is not None:
-        logger.info("Delete mapping for user %s as %s to %s", spec["userarn"], spec["username"], spec["groups"])
-    else:
-        logger.info("Delete mapping for user %s as %s to %s", spec["rolearn"], spec["username"], spec["groups"])
+    arn_field = spec["userarn"] if spec.get("userarn") else spec["rolearn"]
+    logger.info("Delete mapping for user %s as %s to %s", arn_field, spec["username"], spec["groups"])
 
     identity_mappings = get_identity_mappings(configmap)
     updated_mappings = delete_identity(spec, identity_mappings)
