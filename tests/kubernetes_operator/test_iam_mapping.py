@@ -135,6 +135,20 @@ def test_create_mapping_rolearn(mock_apply_identity_mappings, api_client):
     api_client.read_namespaced_config_map.assert_called_with("aws-auth", "kube-system")
 
 
+def test_update_mapping_userarn(mock_apply_identity_mappings, api_client):
+    spec_user_johndoe_updated = {
+        "groups": ["system:masters", "some-other-group-namespace-admin", "new-group-to-update"],
+        "userarn": "arn:aws:iam::000000000000:user/johndoe",
+        "username": "johndoe",
+    }
+
+    # Content of the diff doesnt matter as long as it isn't an empty list
+    run_sync(iam_mapping.create_mapping(spec=spec_user_johndoe_updated, diff=DIFF_NEW_USER_MARK))
+
+    mock_apply_identity_mappings.assert_called_with(CONFIGMAP, [spec_user_johndoe_updated, SPEC_CSEC_ADMIN])
+    api_client.read_namespaced_config_map.assert_called_with("aws-auth", "kube-system")
+
+
 def test_delete_mapping_userarn(mock_apply_identity_mappings, api_client):
     run_sync(iam_mapping.delete_mapping(spec=SPEC_USER_JOHNDOE))
 

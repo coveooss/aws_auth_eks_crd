@@ -96,11 +96,11 @@ def check_synchronization() -> bool:
     identities_in_cm = identities_in_cm if isinstance(identities_in_cm, list) else list()
     identities_in_cm = [u["username"] for u in identities_in_cm]
 
-    if set(identities_in_cm) == set(identities_in_crd):
-        return True
+    if set(identities_in_cm) != set(identities_in_crd):
+        # Raise exception to make the monitoring probe fail
+        raise Exception("monitoring check result : out-of-sync")
 
-    # Raise exception to make the monitoring probe fail
-    raise Exception("monitoring check result : out-of-sync")
+    return True
 
 
 def deploy_crd_definition() -> None:
@@ -176,12 +176,13 @@ async def apply_identity_mappings(existing_cm: V1ConfigMap, identity_mappings: l
 
 
 def ensure_identity(identity: dict, identity_list: list) -> list:
-    """Ensure the identity is in the list, add the identity if not present.
+    """Ensure the identity is in the list and update it if it is, add the identity if not present.
 
     :param identity: The identity to check
     :param identity_list: The list to check against
     :return list: The updated list
     """
+
     for i, existing_identity in enumerate(identity_list):
         # Handle existing identity
         if existing_identity["username"] == identity["username"]:
@@ -199,12 +200,13 @@ def delete_identity(identity: dict, identity_list: list) -> list:
     :param identity_list: The list of identities
     :return list: The updated list
     """
+
     for i, existing_user in enumerate(identity_list):
         if existing_user["username"] == identity["username"]:
             del identity_list[i]
             return identity_list
 
-    logger.warning("Want to delete %s, but not found", identity["username"])
+    logger.warning("Failed to delete %s, identity was not found", identity["username"])
     return identity_list
 
 
