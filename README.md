@@ -9,7 +9,9 @@ So here is an operator to reflect changes in IamIdentityMappings in the aws-auth
 3. Add the git pre-commit hook `poetry run pre-commit install`.
 4. Make your IDE use the virtualenv that was created by poetry.
 
-To run all tests/linters, use `pre-commit run` after staging your changes
+To run all tests, use `poetry run pytest`
+
+To manually run all linters, use `pre-commit run` after staging your changes
 
 ---
 **NOTE**
