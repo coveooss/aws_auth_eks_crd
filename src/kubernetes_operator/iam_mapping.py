@@ -1,5 +1,5 @@
 """Kubernetes operator to manage IamIdentityMappings in the aws-config configmap."""
-
+import asyncio
 import logging
 from pathlib import Path
 
@@ -131,13 +131,14 @@ def full_synchronize() -> None:
     # Get Kubernetes" objects
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
     identity_mappings = custom_objects_API.list_cluster_custom_object(GROUP, VERSION, PLURAL)
+
     identities = get_identity_mappings(configmap)
     identities = identities if isinstance(identities, list) else list()
 
     for identity_mapping in identity_mappings["items"]:
         identities = ensure_identity(identity_mapping["spec"], identities)
 
-    apply_identity_mappings(configmap, identities)
+    asyncio.run(apply_identity_mappings(configmap, identities))
 
 
 def get_identity_mappings(configmap: V1ConfigMap) -> list:
