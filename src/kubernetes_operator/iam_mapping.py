@@ -88,10 +88,10 @@ def get_monitoring_status(**_) -> bool:
 def check_synchronization() -> bool:
     """Compare the aws-auth configmap to the IamIdentityMappings and return if they are in sync."""
 
-    configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
     identity_mappings = custom_objects_API.list_cluster_custom_object(GROUP, VERSION, PLURAL)
     identities_in_crd = [im["spec"]["username"] for im in identity_mappings["items"]]
 
+    configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
     identities_in_cm = get_identity_mappings(configmap)
     identities_in_cm = identities_in_cm if isinstance(identities_in_cm, list) else list()
     identities_in_cm = [u["username"] for u in identities_in_cm]
