@@ -20,7 +20,6 @@ repos:
     rev: 21.5b2
     hooks:
       - id: black
-        args: ["-l", "120"]
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v0.902
     hooks:
@@ -51,7 +50,6 @@ repos:
         entry: pycodestyle
         language: system
         types: ["python"]
-        args: ["--max-line-length=120", "--ignore=E203,W503,E721"]
 -   repo: https://github.com/jendrikseipp/vulture
     rev: v2.3
     hooks:

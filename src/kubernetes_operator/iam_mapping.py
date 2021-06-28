@@ -41,16 +41,18 @@ async def create_mapping(spec: dict, diff: list, **_) -> None:
     """
 
     # Do nothing when we have no diff
-    if not len(diff) < 1:
-        sanitize_spec = dict(spec)
-        configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
+    if not diff:
+        return
 
-        arn_field = spec["userarn"] if spec.get("userarn") else spec["rolearn"]
-        logger.info("Mapping for user %s as %s to %s", arn_field, spec["username"], spec["groups"])
+    sanitize_spec = dict(spec)
+    configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
 
-        identities = get_identity_mappings(configmap)
-        updated_mapping = ensure_identity(sanitize_spec, identities)
-        await apply_identity_mappings(configmap, updated_mapping)
+    arn_field = spec["userarn"] if spec.get("userarn") else spec["rolearn"]
+    logger.info("Mapping for user %s as %s to %s", arn_field, spec["username"], spec["groups"])
+
+    identities = get_identity_mappings(configmap)
+    updated_mapping = ensure_identity(sanitize_spec, identities)
+    await apply_identity_mappings(configmap, updated_mapping)
 
 
 @kopf.on.delete(GROUP, VERSION, PLURAL)
@@ -105,7 +107,7 @@ def check_synchronization() -> bool:
 
 def deploy_crd_definition() -> None:
     """Deploy the CRD (IamIdentityMapping) located in kubernetes/."""
-    crd_file_path = get_project_root() / "kubernetes/iamidentitymappings.yaml"
+    crd_file_path = get_project_root() / "kubernetes" / "iamidentitymappings.yaml"
     with open(crd_file_path.resolve(), "r") as stream:
         body = yaml.safe_load(stream)
     extensions_api = client.ApiextensionsV1beta1Api()
@@ -150,8 +152,8 @@ def get_identity_mappings(configmap: V1ConfigMap) -> list:
 
         return identities
     except yaml.YAMLError as yaml_error:
-        logger.warning("Error loading configmap mappings: %s", yaml_error)
-        return []
+        logger.warning("Operator quitting. Error loading configmap mappings. : %s", yaml_error)
+        raise yaml_error
 
 
 async def apply_identity_mappings(existing_cm: V1ConfigMap, identity_mappings: list) -> None:
