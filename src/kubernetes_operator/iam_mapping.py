@@ -28,6 +28,15 @@ GROUP = "iamauthenticator.k8s.aws"
 VERSION = "v1alpha1"
 PLURAL = "iamidentitymappings"
 
+# This whitelist is only used for the healthz sync check.
+# Currently, the mapping synchronization ignores existing roles as long as they conform to the CRD.
+IGNORED_ROLES_WHITELIST = [
+    "system:node:{{EC2PrivateDNSName}}",
+    "kubectl-access-user",
+    "kubectl-access-user-infra",
+    "kubectl-access-user-infra",
+]
+
 
 @kopf.on.update(GROUP, VERSION, PLURAL)
 @kopf.on.create(GROUP, VERSION, PLURAL)
@@ -98,7 +107,11 @@ def check_synchronization() -> bool:
     identities_in_cm = identities_in_cm if isinstance(identities_in_cm, list) else list()
     identities_in_cm = [u["username"] for u in identities_in_cm]
 
-    if set(identities_in_cm) != set(identities_in_crd):
+    # Ignore the whitelisted role mappings, they are intentionally not in the IamIdentityMappings.
+    # Therefore, they should be ignored when comparing the two sets
+    identities_in_cm_set = set(identities_in_cm) - set(IGNORED_ROLES_WHITELIST)
+
+    if identities_in_cm_set != set(identities_in_crd):
         # Raise exception to make the monitoring probe fail
         raise Exception("monitoring check result : out-of-sync")
 
@@ -126,7 +139,11 @@ def deploy_crd_definition() -> None:
 
 
 def full_synchronize() -> None:
-    """Synchronize all aws-auth configmap mappings with existing IamIdentityMappings."""
+    """Synchronize all aws-auth configmap mappings with existing IamIdentityMappings.
+
+    Important note: This method will ignore any existing entries in mapUsers and mapRoles
+                    as long as they satisfy the CRD.
+    """
     # Get Kubernetes" objects
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
     identity_mappings = custom_objects_API.list_cluster_custom_object(GROUP, VERSION, PLURAL)
@@ -170,7 +187,7 @@ async def apply_identity_mappings(existing_cm: V1ConfigMap, identity_mappings: l
         elif identity_mapping.get("rolearn") is not None:
             role_mappings.append(identity_mapping)
         else:
-            logger.warning("Unrecognized mapping. Skipping %s", identity_mapping)
+            logger.warning("Unrecognized mapping. Cannot map %s. Removing non compliant mapping.", identity_mapping)
 
     existing_cm.data["mapUsers"] = yaml.safe_dump(user_mappings)
     existing_cm.data["mapRoles"] = yaml.safe_dump(role_mappings)

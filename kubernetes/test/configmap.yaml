@@ -8,12 +8,23 @@ metadata:
     k8s-app: aws-iam-authenticator
 data:
   mapRoles: |
-    - roleARN: arn:aws:iam::000000000000:role/KubernetesAdmin
-      username: kubernetes-admin
-      groups:
+    - groups:
+      - system:bootstrappers
+      - system:nodes
+      rolearn: arn:aws:iam::000000000000:role/dev-infra-us-east-000000000000000000000000000
+      username: system:node:{{EC2PrivateDNSName}}
+    - groups:
       - system:masters
+      rolearn: arn:aws:iam::000000000000:role/user-role-ops-specialist
+      username: kubectl-access-user
+    - groups:
+      - system:masters
+      rolearn: arn:aws:iam::000000000000:role/user-role-infra
+      username: kubectl-access-user-infra
+    - groups:
+      - system:masters
+      rolearn: arn:aws:iam::000000000000:role/user-role-global-admin
+      username: kubectl-access-user-infra
+
   mapUsers: |
-    - userARN: arn:aws:iam::000000000000:user/Alice
-      username: alice
-      groups:
-      - system:masters
+    []

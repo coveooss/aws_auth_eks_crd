@@ -26,6 +26,11 @@ SPEC_CSEC_MAINTENANCE = {
     "rolearn": "arn:aws:iam::000000000000:role/sdm-eks-csec-maintenance",
     "username": "sdm-csec-maintenance",
 }
+SPEC_USER_SYSTEM_NODE_TO_IGNORE = {
+    "groups": ["system:bootstrappers", "system:nodes"],
+    "userarn": "arn:aws:iam::000000000000:role/dev-infra-us-east-000000000000000000000000000",
+    "username": "system:node:{{EC2PrivateDNSName}}",
+}
 
 DATA = {"mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN]), "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE])}
 
@@ -164,6 +169,21 @@ def test_delete_mapping_rolearn(mock_apply_identity_mappings, api_client):
 
 
 def test_check_synchronization_no_diff(api_client, custom_objects_api):
+    assert iam_mapping.check_synchronization()
+    api_client.read_namespaced_config_map.assert_called_with("aws-auth", "kube-system")
+    custom_objects_api.list_cluster_custom_object.assert_called_with(GROUP, VERSION, PLURAL)
+
+
+def test_check_synchronization_no_diff_with_ignored_role(api_client, custom_objects_api):
+    data = {
+        "mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN, SPEC_USER_SYSTEM_NODE_TO_IGNORE]),
+        "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE]),
+    }
+    configmap_with_ignore_mapping = client.V1ConfigMap(
+        api_version="v1", kind="ConfigMap", data=data, metadata={"key": "some_metadata"}
+    )
+    api_client.read_namespaced_config_map.return_value = configmap_with_ignore_mapping
+
     assert iam_mapping.check_synchronization()
     api_client.read_namespaced_config_map.assert_called_with("aws-auth", "kube-system")
     custom_objects_api.list_cluster_custom_object.assert_called_with(GROUP, VERSION, PLURAL)
