@@ -59,9 +59,9 @@ async def create_mapping(spec: dict, diff: list, **_) -> None:
     arn_field = spec["userarn"] if spec.get("userarn") else spec["rolearn"]
     logger.info("Mapping for user %s as %s to %s", arn_field, spec["username"], spec["groups"])
 
-    identities = get_identity_mappings(configmap)
+    identities = get_cm_identity_mappings(configmap)
     updated_mapping = ensure_identity(sanitize_spec, identities)
-    await apply_identity_mappings(configmap, updated_mapping)
+    await apply_cm_identity_mappings(configmap, updated_mapping)
 
 
 @kopf.on.delete(GROUP, VERSION, PLURAL)
@@ -75,9 +75,9 @@ async def delete_mapping(spec: dict, **_) -> None:
     arn_field = spec["userarn"] if spec.get("userarn") else spec["rolearn"]
     logger.info("Delete mapping for user %s as %s to %s", arn_field, spec["username"], spec["groups"])
 
-    identity_mappings = get_identity_mappings(configmap)
+    identity_mappings = get_cm_identity_mappings(configmap)
     updated_mappings = delete_identity(spec, identity_mappings)
-    await apply_identity_mappings(configmap, updated_mappings)
+    await apply_cm_identity_mappings(configmap, updated_mappings)
 
 
 @kopf.on.startup()
@@ -103,7 +103,7 @@ def check_synchronization() -> bool:
     identities_in_crd = [im["spec"]["username"] for im in identity_mappings["items"]]
 
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
-    identities_in_cm = get_identity_mappings(configmap)
+    identities_in_cm = get_cm_identity_mappings(configmap)
     identities_in_cm = identities_in_cm if isinstance(identities_in_cm, list) else list()
     identities_in_cm = [u["username"] for u in identities_in_cm]
 
@@ -141,23 +141,24 @@ def deploy_crd_definition() -> None:
 def full_synchronize() -> None:
     """Synchronize all aws-auth configmap mappings with existing IamIdentityMappings.
 
-    Important note: This method will ignore any existing entries in mapUsers and mapRoles
-                    as long as they satisfy the CRD.
+    Important note: This method will ignore any existing entries in mapUsers and mapRoles.
+                    As long as they satisfy the CRD, they will be left unchanged in
+                    the aws-auth configmap.
     """
     # Get Kubernetes" objects
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
     identity_mappings = custom_objects_API.list_cluster_custom_object(GROUP, VERSION, PLURAL)
 
-    identities = get_identity_mappings(configmap)
-    identities = identities if isinstance(identities, list) else list()
+    cm_identities = get_cm_identity_mappings(configmap)
+    cm_identities = cm_identities if isinstance(cm_identities, list) else list()
 
     for identity_mapping in identity_mappings["items"]:
-        identities = ensure_identity(identity_mapping["spec"], identities)
+        cm_identities = ensure_identity(identity_mapping["spec"], cm_identities)
 
-    asyncio.run(apply_identity_mappings(configmap, identities))
+    asyncio.run(apply_cm_identity_mappings(configmap, cm_identities))
 
 
-def get_identity_mappings(configmap: V1ConfigMap) -> list:
+def get_cm_identity_mappings(configmap: V1ConfigMap) -> list:
     """Get the identity mappings from the aws-auth configmap as a list.
 
     :return identities: The combined user and role mapping list
@@ -173,7 +174,7 @@ def get_identity_mappings(configmap: V1ConfigMap) -> list:
         raise yaml_error
 
 
-async def apply_identity_mappings(existing_cm: V1ConfigMap, identity_mappings: list) -> None:
+async def apply_cm_identity_mappings(existing_cm: V1ConfigMap, identity_mappings: list) -> None:
     """Apply new identity mappings to override the existing aws-auth mapping.
 
     :param existing_cm: The current configmap
