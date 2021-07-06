@@ -1,0 +1,56 @@
+[tool.poetry]
+name = "aws_auth_eks_crd"
+version = "0.2.0"
+description = "Operator to configure the aws-auth config map with IamIdentityMappings"
+readme = "README.md"
+repository = "https://github.com/coveooss/aws_auth_eks_crd"
+authors = ["Coveo <blank@email.com>"]
+packages = [
+    { include = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+kubernetes = "^17.17.0"
+kopf = "1.32.1"
+
+[tool.poetry.dev-dependencies]
+bandit = "^1.7.0"
+black = "^21.5b2"
+invoke = "^1.5.0"
+mypy = "^0.812"
+pre-commit = "^2.13.0"
+pycodestyle = "^2.7.0"
+pydocstyle = "^6.1.1"
+pylint = "^2.8.3"
+pytest = "^6.2.4"
+pytest-cov = "^2.12.1"
+PyYAML = "^5.4.1"
+vulture = "^2.3"
+
+[tool.pylint]
+[tool.pylint.message_control]
+disable = [
+    "missing-docstring",
+    "bad-continuation",
+    "broad-except",
+    "fixme",
+    "too-few-public-methods",
+    "no-name-in-module",
+    "redefined-outer-name"
+]
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pydocstyle]
+ignore = "D104,D105,D107,D202,D203,D213,D400"
+
+[tool.vulture]
+min_confidence = 100
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
