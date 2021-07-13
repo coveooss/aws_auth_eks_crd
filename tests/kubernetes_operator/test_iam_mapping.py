@@ -1,9 +1,10 @@
 import asyncio
 import logging
-from unittest.mock import patch, MagicMock
+from os import environ
+from unittest.mock import MagicMock, patch
 
-import pytest
 import yaml
+from pytest import fixture, raises
 from kubernetes import client
 
 import src.kubernetes_operator.iam_mapping as iam_mapping
@@ -84,21 +85,21 @@ VERSION = "v1alpha1"
 PLURAL = "iamidentitymappings"
 
 
-@pytest.fixture
+@fixture
 def api_client():
     with patch(f"{BASE_PATH}.API") as client_mock:
         client_mock.read_namespaced_config_map.return_value = CONFIGMAP
         yield client_mock
 
 
-@pytest.fixture
+@fixture
 def custom_objects_api():
     with patch(f"{BASE_PATH}.custom_objects_API") as custom_objects_api_mock:
         custom_objects_api_mock.list_cluster_custom_object.return_value = IAM_IDENTITY_MAPPINGS
         yield custom_objects_api_mock
 
 
-@pytest.fixture
+@fixture
 def create_mock_coroutine(monkeypatch):
     def _create_mock_patch_coroutine(to_patch=None):
         mock = MagicMock()
@@ -114,7 +115,7 @@ def create_mock_coroutine(monkeypatch):
     return _create_mock_patch_coroutine
 
 
-@pytest.fixture
+@fixture
 def mock_apply_identity_mappings(create_mock_coroutine):
     mock, _ = create_mock_coroutine(to_patch=f"{BASE_PATH}.apply_cm_identity_mappings")
     return mock
@@ -174,10 +175,28 @@ def test_check_synchronization_no_diff(api_client, custom_objects_api):
     custom_objects_api.list_cluster_custom_object.assert_called_with(GROUP, VERSION, PLURAL)
 
 
-def test_check_synchronization_no_diff_with_ignored_role(api_client, custom_objects_api):
+def test_check_synchronization_no_diff_with_ignored_identity(api_client, custom_objects_api):
     data = {
         "mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN, SPEC_USER_SYSTEM_NODE_TO_IGNORE]),
         "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE]),
+    }
+    configmap_with_ignore_mapping = client.V1ConfigMap(
+        api_version="v1", kind="ConfigMap", data=data, metadata={"key": "some_metadata"}
+    )
+    api_client.read_namespaced_config_map.return_value = configmap_with_ignore_mapping
+
+    assert iam_mapping.check_synchronization()
+    api_client.read_namespaced_config_map.assert_called_with("aws-auth", "kube-system")
+    custom_objects_api.list_cluster_custom_object.assert_called_with(GROUP, VERSION, PLURAL)
+
+
+@patch.dict(
+    environ, {"IGNORED_CM_IDENTITIES": f"{SPEC_USER_MARK.get('username')},{SPEC_CSEC_MAINTENANCE.get('username')}"}
+)
+def test_check_synchronization_no_diff_with_ignored_identity_env(api_client, custom_objects_api):
+    data = {
+        "mapRoles": yaml.safe_dump([SPEC_CSEC_MAINTENANCE, SPEC_CSEC_ADMIN, SPEC_USER_SYSTEM_NODE_TO_IGNORE]),
+        "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE, SPEC_USER_MARK]),
     }
     configmap_with_ignore_mapping = client.V1ConfigMap(
         api_version="v1", kind="ConfigMap", data=data, metadata={"key": "some_metadata"}
@@ -194,7 +213,7 @@ def test_check_synchronization_with_diff(api_client, custom_objects_api):
     modified_iam_identity_mapping["items"].pop()
     custom_objects_api.list_cluster_custom_object.return_value = modified_iam_identity_mapping
 
-    with pytest.raises(Exception):
+    with raises(Exception):
         iam_mapping.check_synchronization()
         api_client.read_namespaced_config_map.assert_called_with("aws-auth", "kube-system")
         custom_objects_api.list_cluster_custom_object.assert_called_with(GROUP, VERSION, PLURAL)
