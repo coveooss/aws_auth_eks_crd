@@ -1,6 +1,7 @@
 """Kubernetes operator to manage IamIdentityMappings in the aws-config configmap."""
 import asyncio
 import logging
+from copy import deepcopy
 from os import environ
 from pathlib import Path
 from typing import List
@@ -109,13 +110,12 @@ def check_synchronization() -> bool:
 
     # Allow some mappings in the aws-auth ConfigMap to exist without being defined
     # in an IamIdentityMapping object.
-    identities_in_cm_set = set(identities_in_cm) - set(IGNORED_CM_IDENTITIES)
+    identities_to_ignore: List[str] = deepcopy(IGNORED_CM_IDENTITIES)
 
-    # Do the same with ignored identities declared in an environment variable
     if "IGNORED_CM_IDENTITIES" in environ:
-        identities_to_ignore: List[str] = environ.get("IGNORED_CM_IDENTITIES", "").split(",")
+        identities_to_ignore = identities_to_ignore + environ.get("IGNORED_CM_IDENTITIES", "").split(",")
 
-        identities_in_cm_set = identities_in_cm_set - set(identities_to_ignore)
+    identities_in_cm_set = set(identities_in_cm) - set(identities_to_ignore)
 
     if identities_in_cm_set != set(identities_in_crd):
         # Raise exception to make the monitoring probe fail
