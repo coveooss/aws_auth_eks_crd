@@ -1,7 +1,10 @@
 """Kubernetes operator to manage IamIdentityMappings in the aws-config configmap."""
 import asyncio
 import logging
+from copy import deepcopy
+from os import environ
 from pathlib import Path
+from typing import List
 
 import kopf
 import yaml
@@ -28,13 +31,11 @@ GROUP = "iamauthenticator.k8s.aws"
 VERSION = "v1alpha1"
 PLURAL = "iamidentitymappings"
 
-# This whitelist is only used for the healthz sync check.
-# Currently, the mapping synchronization ignores existing roles as long as they conform to the CRD.
-IGNORED_ROLES_WHITELIST = [
+# Allow some mappings in the aws-auth ConfigMap to exist without being defined
+# in a IamIdentityMapping object.
+IGNORED_CM_IDENTITIES = [
+    # EKS worker nodes
     "system:node:{{EC2PrivateDNSName}}",
-    "kubectl-access-user",
-    "kubectl-access-user-infra",
-    "kubectl-access-user-infra",
 ]
 
 
@@ -107,9 +108,14 @@ def check_synchronization() -> bool:
     identities_in_cm = identities_in_cm if isinstance(identities_in_cm, list) else list()
     identities_in_cm = [u["username"] for u in identities_in_cm]
 
-    # Ignore the whitelisted role mappings, they are intentionally not in the IamIdentityMappings.
-    # Therefore, they should be ignored when comparing the two sets
-    identities_in_cm_set = set(identities_in_cm) - set(IGNORED_ROLES_WHITELIST)
+    # Allow some mappings in the aws-auth ConfigMap to exist without being defined
+    # in an IamIdentityMapping object.
+    identities_to_ignore: List[str] = deepcopy(IGNORED_CM_IDENTITIES)
+
+    if "IGNORED_CM_IDENTITIES" in environ:
+        identities_to_ignore = identities_to_ignore + environ.get("IGNORED_CM_IDENTITIES", "").split(",")
+
+    identities_in_cm_set = set(identities_in_cm) - set(identities_to_ignore)
 
     if identities_in_cm_set != set(identities_in_crd):
         # Raise exception to make the monitoring probe fail
