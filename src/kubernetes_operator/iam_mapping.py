@@ -171,8 +171,10 @@ def get_cm_identity_mappings(configmap: V1ConfigMap) -> list:
     """
     try:
         identities = []
-        identities.extend(yaml.safe_load(configmap.data["mapUsers"]))
-        identities.extend(yaml.safe_load(configmap.data["mapRoles"]))
+        if configmap.data.get("mapUsers"):
+            identities.extend(yaml.safe_load(configmap.data.get("mapUsers")))
+        if configmap.data.get("mapRoles"):
+            identities.extend(yaml.safe_load(configmap.data.get("mapRoles")))
 
         return identities
     except yaml.YAMLError as yaml_error:

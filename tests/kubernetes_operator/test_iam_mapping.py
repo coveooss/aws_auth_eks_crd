@@ -34,9 +34,19 @@ SPEC_USER_SYSTEM_NODE_TO_IGNORE = {
 }
 
 DATA = {"mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN]), "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE])}
+DATA_MISSING_MAPUSERS = {"mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN])}
+DATA_MISSING_MAPROLES = {"mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE])}
 
 CONFIGMAP = client.V1ConfigMap(api_version="v1", kind="ConfigMap", data=DATA, metadata={"key": "some_metadata"})
-
+CONFIGMAP_MISSING_MAPUSERS = client.V1ConfigMap(
+    api_version="v1", kind="ConfigMap", data=DATA_MISSING_MAPUSERS, metadata={"key": "some_metadata"}
+)
+CONFIGMAP_MISSING_MAPROLES = client.V1ConfigMap(
+    api_version="v1", kind="ConfigMap", data=DATA_MISSING_MAPROLES, metadata={"key": "some_metadata"}
+)
+CONFIGMAP_MISSING_DATA = client.V1ConfigMap(
+    api_version="v1", kind="ConfigMap", data={}, metadata={"key": "some_metadata"}
+)
 DIFF_NEW_USER_MARK = [
     (
         "add",
@@ -278,3 +288,33 @@ def test_apply_cm_identity_mappings_with_userarn_and_rolearn_and_unknown_mapping
     assert caplog.messages
     for message in caplog.messages:
         assert message.find("Unrecognized mapping.") != -1
+
+
+def test_apply_cm_identity_mappings_with_no_mapping(api_client):
+    run_sync(iam_mapping.apply_cm_identity_mappings(CONFIGMAP, []))
+
+    expected_cm_data = {"mapRoles": yaml.safe_dump([]), "mapUsers": yaml.safe_dump([])}
+    expected_configmap = client.V1ConfigMap(
+        api_version="v1", kind="ConfigMap", data=expected_cm_data, metadata={"key": "some_metadata"}
+    )
+    api_client.patch_namespaced_config_map.assert_called_with("aws-auth", "kube-system", expected_configmap)
+
+
+def test_get_cm_identity_mappings_with_empty_mapusers_skips():
+    ret = iam_mapping.get_cm_identity_mappings(CONFIGMAP_MISSING_MAPUSERS)
+
+    assert len(ret) == 1
+    assert ret[0] == SPEC_CSEC_ADMIN
+
+
+def test_get_cm_identity_mappings_with_empty_maproles_skips():
+    ret = iam_mapping.get_cm_identity_mappings(CONFIGMAP_MISSING_MAPROLES)
+
+    assert len(ret) == 1
+    assert ret[0] == SPEC_USER_JOHNDOE
+
+
+def test_get_cm_identity_mappings_with_empty_configmap_returns_no_identity():
+    ret = iam_mapping.get_cm_identity_mappings(CONFIGMAP_MISSING_DATA)
+
+    assert len(ret) == 0
