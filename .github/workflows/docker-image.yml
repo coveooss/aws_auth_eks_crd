@@ -28,5 +28,5 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ aws_auth_eks_crd:$(date +%s) }}
-        labels: ${{ aws_auth_eks_crd:$(date +%s) }}
+        tags: 0.6.2
+        labels: 0.6.2
