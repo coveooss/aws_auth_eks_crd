@@ -25,18 +25,11 @@ jobs:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
         password: ${{ github.token }}
-        
-    - name: Setup Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-        
-    - name: Prepare Docker build
-      shell: bash
-      run: docker run --privileged --rm tonistiigi/binfmt --install all
       
-    - name: Build and push images
-      shell: bash
-      env:
-        VERSION: 0.6.2
-      run: python ./build_and_push_images.py --version "$VERSION"
+    - name: Build and push Docker images
+      uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+      with:
+        context: .
+        push: true
+        tags: 0.6.2
+        labels: 0.6.2
