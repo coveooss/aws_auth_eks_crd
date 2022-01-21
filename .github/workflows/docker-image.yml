@@ -30,6 +30,10 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
+        
+    - name: Prepare Docker build
+      shell: bash
+      run: docker run --privileged --rm tonistiigi/binfmt --install all
       
     - name: Build and push images
       shell: bash
