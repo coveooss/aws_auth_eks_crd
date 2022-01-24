@@ -23,8 +23,8 @@ jobs:
       uses: docker/login-action@v1
       with:
         registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ github.token }}
+        username: dblanchette
+        password: ${{ secrets.TEMP_GH_TOKEN }}
       
     - name: Build and push Docker images
       uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
