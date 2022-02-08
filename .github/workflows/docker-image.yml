@@ -31,5 +31,5 @@ jobs:
       with:
         context: .
         push: true
-        tags: ghcr.io/coveooss/aws_auth_eks_crd:0.6.2
-        labels: 0.6.2
+        tags: ghcr.io/coveooss/aws_auth_eks_crd:0.6.3
+        labels: 0.6.3
