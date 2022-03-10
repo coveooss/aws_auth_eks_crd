@@ -2,6 +2,11 @@ name: Build and push image
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Semantic version to be built"
+        required: true
+        type: string
 
 jobs:
   push_to_registries:
@@ -27,5 +32,5 @@ jobs:
       with:
         context: .
         push: true
-        tags: ghcr.io/coveooss/aws_auth_eks_crd:0.6.3
-        labels: 0.6.3
+        tags: ghcr.io/coveooss/aws_auth_eks_crd:${{ github.event.inputs.version }}
+        labels: ${{ github.event.inputs.version }}
