@@ -37,12 +37,41 @@ You can also test the operator locally in a minikube context.
 6. Verify the change is applied by the operator in the configmap with `kubectl get cm -n kube-system aws-auth -o yaml`
 
 
-## Usage
+## Deploy
 
-### Deploy CRD definition
+### With kubectl
+
+- Deploy the CRD definition
 
 ```kubectl apply -f kubernetes/iamidentitymapping.yaml```
 
-### Deploy operator
+- Deploy the operator
 
 ```kubectl apply -f kubernetes/auth-operator.yaml```
+
+### With Kustomize
+
+```bash
+# Choose a specific ref and tag if needed
+REF=master
+TAG=0.6.4
+
+cat <<EOF > kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kube-system
+
+resources:
+- https://github.com/coveooss/aws_auth_eks_crd//kubernetes/?ref=$REF
+
+images:
+- name: coveo/aws-auth-operator:0.1
+  newName: ghcr.io/coveooss/aws_auth_eks_crd
+  newTag: $TAG
+
+EOF
+
+# Deploy
+kustomize build . | kubectl apply -f -
+```

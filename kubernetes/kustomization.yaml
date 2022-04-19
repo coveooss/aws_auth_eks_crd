@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kube-system
+
+resources:
+- iamidentitymappings.yaml
+- auth-operator.yaml
+
+images:
+- name: coveo/aws-auth-operator:0.1
+  newName: ghcr.io/coveooss/aws_auth_eks_crd
+  newTag: 0.6.4
