@@ -51,7 +51,7 @@ metadata:
   namespace: kube-system
   name: auth-operator
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: auth-operator-role-cluster
@@ -87,7 +87,7 @@ rules:
       - patch
       - update
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: auth-operator-rolebinding-cluster

@@ -57,7 +57,7 @@ REF=master
 TAG=0.6.4
 
 cat <<EOF > kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
+apiVersion: kustomize.config.k8s.io/v1
 kind: Kustomization
 
 namespace: kube-system
