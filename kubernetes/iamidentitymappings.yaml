@@ -1,39 +1,41 @@
----
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: iamidentitymappings.iamauthenticator.k8s.aws
 spec:
   group: iamauthenticator.k8s.aws
-  version: v1alpha1
-  scope: Cluster
   names:
+    categories:
+    - all
+    kind: IAMIdentityMapping
     plural: iamidentitymappings
     singular: iamidentitymapping
-    kind: IAMIdentityMapping
-    categories:
-      - all
-  validation:
-    openAPIV3Schema:
-      properties:
-        spec:
-          oneOf:
-          - required:
-            - userarn
-            - username
-          - required:
-            - rolearn
-            - username
-          properties:
-            groups:
-              items:
+  scope: Cluster
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            oneOf:
+            - required:
+              - userarn
+              - username
+            - required:
+              - rolearn
+              - username
+            properties:
+              groups:
+                items:
+                  type: string
+                type: array
+              rolearn:
                 type: string
-              type: array
-            userarn:
-              type: string
-            rolearn:
-              type: string
-            username:
-              type: string
-          type: object
-      type: object
+              userarn:
+                type: string
+              username:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
