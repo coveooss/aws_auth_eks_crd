@@ -129,7 +129,7 @@ def deploy_crd_definition() -> None:
     crd_file_path = get_project_root() / "kubernetes" / "iamidentitymappings.yaml"
     with open(crd_file_path.resolve(), "r") as stream:
         body = yaml.safe_load(stream)
-    extensions_api = client.ApiextensionsV1beta1Api()
+    extensions_api = client.ApiextensionsV1Api()
     crds = extensions_api.list_custom_resource_definition()
     crds_name = {x["metadata"]["name"]: x["metadata"]["resource_version"] for x in crds.to_dict()["items"]}
     crd_name = body["metadata"]["name"]
