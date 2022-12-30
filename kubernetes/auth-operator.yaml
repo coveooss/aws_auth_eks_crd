@@ -25,7 +25,7 @@ spec:
             - --verbose
             - --liveness=http://0.0.0.0:8080/healthz
             - --standalone
-          image: dcodetech/aws_auth_eks_crd:latest
+          image: dcodetech/aws_auth_eks_crd:1.1.0
           imagePullPolicy: IfNotPresent
           name: operator
           ports:

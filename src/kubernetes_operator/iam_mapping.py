@@ -213,9 +213,14 @@ def ensure_identity(identity: dict, identity_list: list) -> list:
 
     for i, existing_identity in enumerate(identity_list):
         # Handle existing identity
-        if existing_identity["username"] == identity["username"]:
+        if "rolearn" in existing_identity and existing_identity["rolearn"] == identity["rolearn"]:
             identity_list[i] = identity
             return identity_list
+        
+        if "userarn" in existing_identity and existing_identity["userarn"] == identity["userarn"]:
+            identity_list[i] = identity
+            return identity_list
+
     # Handle new identity
     identity_list.append(identity)
     return identity_list
