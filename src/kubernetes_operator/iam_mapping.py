@@ -35,11 +35,21 @@ PLURAL = "iamidentitymappings"
 # in a IamIdentityMapping object.
 IGNORED_CM_IDENTITIES = [
     # EKS worker nodes
-    "system:node:{{EC2PrivateDNSName}}",
+    # "system:node:{{EC2PrivateDNSName}}",
 ]
 
 
 @kopf.on.update(GROUP, VERSION, PLURAL)
+# async def update_mapping(spec: dict, diff: list, **_) -> None:
+async def update_mapping(old, new, diff, **_) -> None:
+    # Do nothing when we have no diff
+    if not diff:
+        return
+
+    await delete_mapping(old["spec"])
+    await create_mapping(new["spec"], diff)
+
+# @kopf.on.update(GROUP, VERSION, PLURAL)
 @kopf.on.create(GROUP, VERSION, PLURAL)
 async def create_mapping(spec: dict, diff: list, **_) -> None:
     """Create/update an identity mapping in the aws-auth configmap with the corresponding IamIdentityMapping.
@@ -235,7 +245,11 @@ def delete_identity(identity: dict, identity_list: list) -> list:
     """
 
     for i, existing_user in enumerate(identity_list):
-        if existing_user["username"] == identity["username"]:
+        if "rolearn" in existing_user and existing_user["rolearn"] == identity["rolearn"]:
+            del identity_list[i]
+            return identity_list
+
+        if "userarn" in existing_user and existing_user["userarn"] == identity["userarn"]:
             del identity_list[i]
             return identity_list
 
