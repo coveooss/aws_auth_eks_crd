@@ -4,7 +4,7 @@ metadata:
   labels:
     app: auth-operator
   name: auth-operator
-  namespace: kube-system
+  namespace: auth-operator
 spec:
   replicas: 1
   selector:
@@ -44,4 +44,3 @@ spec:
               port: 8080
             periodSeconds: 900
             timeoutSeconds: 30
-
