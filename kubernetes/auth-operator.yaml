@@ -16,7 +16,7 @@ spec:
     metadata:
       labels:
         app: auth-operator
-        prefer_run_on_fargate: true
+        prefer_run_on_fargate: 'true'
       namespace: kube-system
     spec:
       automountServiceAccountToken: true
