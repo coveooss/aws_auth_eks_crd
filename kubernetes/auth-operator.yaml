@@ -4,7 +4,7 @@ metadata:
   labels:
     app: auth-operator
   name: auth-operator
-  namespace: auth-operator
+  namespace: infra
 spec:
   replicas: 1
   selector:
@@ -17,7 +17,7 @@ spec:
       labels:
         app: auth-operator
         prefer_run_on_fargate: 'true'
-      namespace: kube-system
+      namespace: infra
     spec:
       automountServiceAccountToken: true
       serviceAccount: auth-operator
