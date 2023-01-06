@@ -16,7 +16,7 @@ spec:
     metadata:
       labels:
         app: auth-operator
-        prefer_run_on_fargate: ''
+        prefer_run_on_fargate: 'yes'
       namespace: infra
     spec:
       automountServiceAccountToken: true
