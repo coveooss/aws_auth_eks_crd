@@ -9,4 +9,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: auth-operator
-    namespace: auth-operator
+    namespace: infra
