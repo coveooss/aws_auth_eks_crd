@@ -29,6 +29,9 @@ spec:
           image: dcodetech/aws_auth_eks_crd:1.1.8
           imagePullPolicy: IfNotPresent
           name: operator
+          env:
+            - name: IGNORED_CM_IDENTITIES
+              value: "system:node:{{SessionName}},system:node:{{EC2PrivateDNSName}}"
           ports:
           - containerPort: 8080
             protocol: TCP
