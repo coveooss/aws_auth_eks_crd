@@ -32,7 +32,13 @@ SPEC_USER_SYSTEM_NODE_TO_IGNORE = {
     "userarn": "arn:aws:iam::000000000000:role/dev-infra-us-east-000000000000000000000000000",
     "username": "system:node:{{EC2PrivateDNSName}}",
 }
+SPEC_FARGATE_PROFILE_ROLE_TO_IGNORE = {
+    "groups": ["system:bootstrappers", "system:nodes"],
+    "rolearn": "arn:aws:iam::000000000000:role/dev-infra-us-east-000000000000000000000000000",
+    "username": "system:node:{{SessionName}}",
+}
 
+EMPTY_DATA = {"mapRoles": yaml.safe_dump([]), "mapUsers": yaml.safe_dump([])}
 DATA = {"mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN]), "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE])}
 DATA_MISSING_MAPUSERS = {"mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN])}
 DATA_MISSING_MAPROLES = {"mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE])}
@@ -185,9 +191,12 @@ def test_check_synchronization_no_diff(api_client, custom_objects_api):
     custom_objects_api.list_cluster_custom_object.assert_called_with(GROUP, VERSION, PLURAL)
 
 
+@patch.dict(
+    environ, {"IGNORED_CM_IDENTITIES": f"{SPEC_USER_SYSTEM_NODE_TO_IGNORE.get('username')}"}
+)
 def test_check_synchronization_no_diff_with_ignored_identity(api_client, custom_objects_api):
     data = {
-        "mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN, SPEC_USER_SYSTEM_NODE_TO_IGNORE]),
+        "mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN, SPEC_USER_SYSTEM_NODE_TO_IGNORE, SPEC_FARGATE_PROFILE_ROLE_TO_IGNORE]),
         "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE]),
     }
     configmap_with_ignore_mapping = client.V1ConfigMap(
@@ -201,7 +210,8 @@ def test_check_synchronization_no_diff_with_ignored_identity(api_client, custom_
 
 
 @patch.dict(
-    environ, {"IGNORED_CM_IDENTITIES": f"{SPEC_USER_MARK.get('username')},{SPEC_CSEC_MAINTENANCE.get('username')}"}
+    environ, {
+        "IGNORED_CM_IDENTITIES": f"{SPEC_USER_MARK.get('username')},{SPEC_CSEC_MAINTENANCE.get('username')},{SPEC_USER_SYSTEM_NODE_TO_IGNORE.get('username')}"}
 )
 def test_check_synchronization_no_diff_with_ignored_identity_env(api_client, custom_objects_api):
     data = {
