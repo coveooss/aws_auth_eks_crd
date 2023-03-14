@@ -419,7 +419,7 @@ files = [
 cachetools = ">=2.0.0,<5.0"
 pyasn1-modules = ">=0.2.1"
 rsa = {version = ">=3.1.4,<5", markers = "python_version >= \"3.6\""}
-setuptools = ">=40.3.0"
+setuptools = ">=58.2.0"
 six = ">=1.9.0"
 
 [package.extras]
