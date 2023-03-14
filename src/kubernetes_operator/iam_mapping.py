@@ -34,8 +34,8 @@ PLURAL = "iamidentitymappings"
 # Allow some mappings in the aws-auth ConfigMap to exist without being defined
 # in a IamIdentityMapping object.
 IGNORED_CM_IDENTITIES = [
-    # EKS worker nodes
-    # "system:node:{{EC2PrivateDNSName}}",
+    # Fargate profile mapping
+    "system:node:{{SessionName}}",
 ]
 
 
@@ -49,7 +49,7 @@ async def update_mapping(old, new, diff, **_) -> None:
     await delete_mapping(old["spec"])
     await create_mapping(new["spec"], diff)
 
-# @kopf.on.update(GROUP, VERSION, PLURAL)
+
 @kopf.on.create(GROUP, VERSION, PLURAL)
 async def create_mapping(spec: dict, diff: list, **_) -> None:
     """Create/update an identity mapping in the aws-auth configmap with the corresponding IamIdentityMapping.
@@ -223,11 +223,11 @@ def ensure_identity(identity: dict, identity_list: list) -> list:
 
     for i, existing_identity in enumerate(identity_list):
         # Handle existing identity
-        if "rolearn" in existing_identity and existing_identity["rolearn"] == identity["rolearn"]:
+        if "rolearn" in existing_identity and existing_identity.get("rolearn") == identity.get("rolearn"):
             identity_list[i] = identity
             return identity_list
-        
-        if "userarn" in existing_identity and existing_identity["userarn"] == identity["userarn"]:
+
+        if "userarn" in existing_identity and existing_identity.get("userarn") == identity.get("userarn"):
             identity_list[i] = identity
             return identity_list
 
@@ -245,11 +245,11 @@ def delete_identity(identity: dict, identity_list: list) -> list:
     """
 
     for i, existing_user in enumerate(identity_list):
-        if "rolearn" in existing_user and existing_user["rolearn"] == identity["rolearn"]:
+        if "rolearn" in existing_user and existing_user.get("rolearn") == identity.get("rolearn"):
             del identity_list[i]
             return identity_list
 
-        if "userarn" in existing_user and existing_user["userarn"] == identity["userarn"]:
+        if "userarn" in existing_user and existing_user.get("userarn") == identity.get("userarn"):
             del identity_list[i]
             return identity_list
 
