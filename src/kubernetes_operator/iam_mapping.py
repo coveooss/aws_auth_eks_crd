@@ -58,7 +58,7 @@ async def create_mapping(spec: dict, diff: list, **_) -> None:
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
 
     arn_field = spec["userarn"] if spec.get("userarn") else spec["rolearn"]
-    logger.info("Mapping for user %s as %s to %s", arn_field, spec["username"], spec["groups"])
+    logger.info("Mapping for user %s as %s to %s", arn_field, spec["username"], spec.get("groups", "(no group)"))
 
     identities = get_cm_identity_mappings(configmap)
     updated_mapping = ensure_identity(sanitize_spec, identities)
@@ -74,7 +74,7 @@ async def delete_mapping(spec: dict, **_) -> None:
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
 
     arn_field = spec["userarn"] if spec.get("userarn") else spec["rolearn"]
-    logger.info("Delete mapping for user %s as %s to %s", arn_field, spec["username"], spec["groups"])
+    logger.info("Delete mapping for user %s as %s to %s", arn_field, spec["username"], spec.get("groups", "(no group)"))
 
     identity_mappings = get_cm_identity_mappings(configmap)
     updated_mappings = delete_identity(spec, identity_mappings)
