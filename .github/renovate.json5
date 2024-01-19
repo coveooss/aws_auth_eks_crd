@@ -19,5 +19,10 @@
   "suppressNotifications": [
     "prIgnoreNotification"
   ],
-  "timezone": "America/Toronto"
+  "timezone": "America/Toronto",
+  "vulnerabilityAlerts": {
+    "labels": [
+      "security"
+    ]
+  }
 }

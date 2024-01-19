@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aws_auth_eks_crd"
-version = "0.3.0"
+version = "0.7.0"
 description = "Operator to configure the aws-auth config map with IamIdentityMappings"
 readme = "README.md"
 repository = "https://github.com/coveooss/aws_auth_eks_crd"

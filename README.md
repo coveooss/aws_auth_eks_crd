@@ -102,7 +102,7 @@ You can also test the operator locally in a minikube context.
 ```bash
 # Choose a specific ref and tag if needed
 REF=master
-TAG=0.6.4
+TAG=0.7.0
 
 cat <<EOF > kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
