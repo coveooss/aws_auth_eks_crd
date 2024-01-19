@@ -27,7 +27,6 @@ jobs:
         with:
           python-version: "3.10"
           project-name: aws_auth_eks_crd
-          poetry-version: "~=1.7.1)"
 
   dependency-review:
     name: Dependency Review
