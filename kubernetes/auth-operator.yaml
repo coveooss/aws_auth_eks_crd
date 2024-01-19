@@ -25,7 +25,7 @@ spec:
             - --verbose
             - --liveness=http://0.0.0.0:8080/healthz
             - --standalone
-          image: coveo/aws-auth-operator:0.1
+          image: ghcr.io/coveooss/aws_auth_eks_crd:0.7.0
           imagePullPolicy: IfNotPresent
           name: operator
           ports:

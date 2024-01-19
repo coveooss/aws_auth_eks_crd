@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aws_auth_eks_crd"
-version = "0.2.0"
+version = "0.7.0"
 description = "Operator to configure the aws-auth config map with IamIdentityMappings"
 readme = "README.md"
 repository = "https://github.com/coveooss/aws_auth_eks_crd"
@@ -10,23 +10,45 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.10.5"
-kubernetes = "^26.1.0"
-kopf = "1.32.1"
+python = "3.10.13"
+kubernetes = "28.1.0"
+kopf = "1.36.2"
 
 [tool.poetry.dev-dependencies]
-bandit = "^1.7.0"
-black = "^21.5b2"
-invoke = "^1.5.0"
-mypy = "^0.812"
-pre-commit = "^2.13.0"
-pycodestyle = "^2.7.0"
-pydocstyle = "^6.1.1"
-pylint = "^2.8.3"
-pytest = "^6.2.4"
-pytest-cov = "^2.12.1"
-PyYAML = "^5.4.1"
-vulture = "^2.3"
+bandit = "1.7.6"
+black = "23.12.1"
+invoke = "2.2.0"
+mypy = "1.8.0"
+pre-commit = "3.6.0"
+pycodestyle = "2.11.1"
+pydocstyle = "6.3.0"
+pylint = "3.0.3"
+pytest = "7.4.4"
+pytest-cov = "4.1.0"
+PyYAML = "6.0.1"
+vulture = "2.10"
+
+[tool.poetry.group.dev.dependencies]
+types-pyyaml = "^6.0.12.12"
+types-setuptools = "^69.0.0.20240115"
+pytest-mock = "^3.12.0"
+isort = "^5.13.2"
+
+[tool.stew.ci]
+black = true
+
+[tool.stew.ci.custom-runners]
+pylint = { args = ["src/"] }
+vulture = { args = ["src/", "tests/"] }
+pydocstyle = {args = ["src/", "--ignore=D104,D213,D203,D107,D202"]}
+pycodestyle = { args = ["src/", "--max-line-length=120","--ignore=E203,W503,W504"] }
+isort = { check-args = ["--check", "."], autofix-args = ["."] }
+
+[tool.stew.ci.custom-runners.pytest]
+check-args = ["--cov", "src", "--cov-report", "term", "--cov-report", "html", "--cov-report", "xml", "--junit-xml=reports/test_results.xml"]
+
+[tool.stew.build-dependencies]
+setuptools = "*"
 
 [tool.pylint]
 [tool.pylint.message_control]
@@ -46,11 +68,15 @@ max-line-length = 120
 ignore = "D104,D105,D107,D202,D203,D213,D400"
 
 [tool.vulture]
-min_confidence = 100
+min_confidence = 61
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+profile = "black"
+line_length = 120
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.black]
-line-length = 120

@@ -13,11 +13,16 @@
     "bot"
   ],
   "prConcurrentLimit": 3,
-  "prHeader": "DT-5590 <- Put your own jira issue here by setting the `prHeader` value in your renovate config",
+  "prHeader": "DEF-160",
   "rebaseWhen": "auto",
   "reviewersFromCodeOwners": true,
   "suppressNotifications": [
     "prIgnoreNotification"
   ],
-  "timezone": "America/Toronto"
+  "timezone": "America/Toronto",
+  "vulnerabilityAlerts": {
+    "labels": [
+      "security"
+    ]
+  }
 }
