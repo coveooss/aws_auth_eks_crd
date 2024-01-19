@@ -4,12 +4,13 @@ import logging
 from copy import deepcopy
 from os import environ
 from pathlib import Path
-from typing import List, Any
+from typing import Any, List
 
 import kopf
 import yaml
-from kubernetes import client, config  # type: ignore
 from kubernetes.client.models.v1_config_map import V1ConfigMap
+
+from kubernetes import client, config  # type: ignore
 
 logger = logging.getLogger("operator")
 

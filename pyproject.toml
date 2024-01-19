@@ -31,6 +31,8 @@ vulture = "2.10"
 [tool.poetry.group.dev.dependencies]
 types-pyyaml = "^6.0.12.12"
 types-setuptools = "^69.0.0.20240115"
+pytest-mock = "^3.12.0"
+isort = "^5.13.2"
 
 [tool.stew.ci]
 black = true
@@ -40,6 +42,7 @@ pylint = { args = ["src/"] }
 vulture = { args = ["src/", "tests/"] }
 pydocstyle = {args = ["src/", "--ignore=D104,D213,D203,D107,D202"]}
 pycodestyle = { args = ["src/", "--max-line-length=120","--ignore=E203,W503,W504"] }
+isort = { check-args = ["--check", "."], autofix-args = ["."] }
 
 [tool.stew.ci.custom-runners.pytest]
 check-args = ["--cov", "src", "--cov-report", "term", "--cov-report", "html", "--cov-report", "xml", "--junit-xml=reports/test_results.xml"]
@@ -69,6 +72,10 @@ min_confidence = 61
 
 [tool.black]
 line-length = 120
+
+[tool.isort]
+profile = "black"
+line_length = 120
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -5,9 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import yaml
 from pytest import fixture, raises
-from kubernetes import client
 
-import src.kubernetes_operator.iam_mapping as iam_mapping
+from kubernetes import client
 
 BASE_PATH = "src.kubernetes_operator.iam_mapping"
 
@@ -95,6 +94,11 @@ VERSION = "v1alpha1"
 PLURAL = "iamidentitymappings"
 
 
+@fixture(autouse=True)
+def no_config_needed(login_mocks):
+    pass
+
+
 @fixture
 def api_client():
     with patch(f"{BASE_PATH}.API") as client_mock:
@@ -136,6 +140,8 @@ def run_sync(coroutine):
 
 
 def test_create_mapping_userarn(mock_apply_identity_mappings, api_client):
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     run_sync(iam_mapping.create_mapping(spec=SPEC_USER_MARK, diff=DIFF_NEW_USER_MARK))
 
     mock_apply_identity_mappings.assert_called_with(CONFIGMAP, [SPEC_USER_JOHNDOE, SPEC_CSEC_ADMIN, SPEC_USER_MARK])
@@ -143,6 +149,8 @@ def test_create_mapping_userarn(mock_apply_identity_mappings, api_client):
 
 
 def test_create_mapping_rolearn(mock_apply_identity_mappings, api_client):
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     run_sync(iam_mapping.create_mapping(spec=SPEC_CSEC_MAINTENANCE, diff=DIFF_NEW_ROLE_CSEC_MAINTENANCE))
 
     mock_apply_identity_mappings.assert_called_with(
@@ -152,6 +160,8 @@ def test_create_mapping_rolearn(mock_apply_identity_mappings, api_client):
 
 
 def test_update_mapping_userarn(mock_apply_identity_mappings, api_client):
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     spec_user_johndoe_updated = {
         "groups": ["system:masters", "some-other-group-namespace-admin", "new-group-to-update"],
         "userarn": "arn:aws:iam::000000000000:user/johndoe",
@@ -166,6 +176,8 @@ def test_update_mapping_userarn(mock_apply_identity_mappings, api_client):
 
 
 def test_delete_mapping_userarn(mock_apply_identity_mappings, api_client):
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     run_sync(iam_mapping.delete_mapping(spec=SPEC_USER_JOHNDOE))
 
     mock_apply_identity_mappings.assert_called_with(CONFIGMAP, [SPEC_CSEC_ADMIN])
@@ -173,6 +185,8 @@ def test_delete_mapping_userarn(mock_apply_identity_mappings, api_client):
 
 
 def test_delete_mapping_rolearn(mock_apply_identity_mappings, api_client):
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     run_sync(iam_mapping.delete_mapping(spec=SPEC_CSEC_ADMIN))
 
     mock_apply_identity_mappings.assert_called_with(CONFIGMAP, [SPEC_USER_JOHNDOE])
@@ -180,12 +194,16 @@ def test_delete_mapping_rolearn(mock_apply_identity_mappings, api_client):
 
 
 def test_check_synchronization_no_diff(api_client, custom_objects_api):
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     assert iam_mapping.check_synchronization()
     api_client.read_namespaced_config_map.assert_called_with("aws-auth", "kube-system")
     custom_objects_api.list_cluster_custom_object.assert_called_with(GROUP, VERSION, PLURAL)
 
 
 def test_check_synchronization_no_diff_with_ignored_identity(api_client, custom_objects_api):
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     data = {
         "mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN, SPEC_USER_SYSTEM_NODE_TO_IGNORE]),
         "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE]),
@@ -204,6 +222,8 @@ def test_check_synchronization_no_diff_with_ignored_identity(api_client, custom_
     environ, {"IGNORED_CM_IDENTITIES": f"{SPEC_USER_MARK.get('username')},{SPEC_CSEC_MAINTENANCE.get('username')}"}
 )
 def test_check_synchronization_no_diff_with_ignored_identity_env(api_client, custom_objects_api):
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     data = {
         "mapRoles": yaml.safe_dump([SPEC_CSEC_MAINTENANCE, SPEC_CSEC_ADMIN, SPEC_USER_SYSTEM_NODE_TO_IGNORE]),
         "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE, SPEC_USER_MARK]),
@@ -219,6 +239,8 @@ def test_check_synchronization_no_diff_with_ignored_identity_env(api_client, cus
 
 
 def test_check_synchronization_with_diff(api_client, custom_objects_api):
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     modified_iam_identity_mapping = custom_objects_api.list_cluster_custom_object.return_value
     modified_iam_identity_mapping["items"].pop()
     custom_objects_api.list_cluster_custom_object.return_value = modified_iam_identity_mapping
@@ -230,6 +252,8 @@ def test_check_synchronization_with_diff(api_client, custom_objects_api):
 
 
 def test_full_synchronize(mock_apply_identity_mappings, api_client, custom_objects_api):
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     iam_mapping.full_synchronize()
 
     mock_apply_identity_mappings.assert_called_with(CONFIGMAP, [SPEC_USER_JOHNDOE, SPEC_CSEC_ADMIN])
@@ -238,6 +262,8 @@ def test_full_synchronize(mock_apply_identity_mappings, api_client, custom_objec
 
 
 def test_apply_cm_identity_mappings_with_userarn(api_client):
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     run_sync(iam_mapping.apply_cm_identity_mappings(CONFIGMAP, [SPEC_USER_JOHNDOE]))
 
     expected_cm_data = {"mapRoles": yaml.safe_dump([]), "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE])}
@@ -248,6 +274,8 @@ def test_apply_cm_identity_mappings_with_userarn(api_client):
 
 
 def test_apply_cm_identity_mappings_with_rolearn(api_client):
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     run_sync(iam_mapping.apply_cm_identity_mappings(CONFIGMAP, [SPEC_CSEC_ADMIN]))
 
     expected_cm_data = {"mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN]), "mapUsers": yaml.safe_dump([])}
@@ -258,6 +286,8 @@ def test_apply_cm_identity_mappings_with_rolearn(api_client):
 
 
 def test_apply_cm_identity_mappings_with_unknown_mapping(api_client, caplog):
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     caplog.set_level(logging.WARNING)
     some_unknown_spec = {"groups": ["system:masters"], "arn": "arn:aws:iam::000000000000:user/bob", "username": "bob"}
 
@@ -275,6 +305,8 @@ def test_apply_cm_identity_mappings_with_unknown_mapping(api_client, caplog):
 
 
 def test_apply_cm_identity_mappings_with_userarn_and_rolearn_and_unknown_mapping(api_client, caplog):
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     caplog.set_level(logging.WARNING)
     some_unknown_spec = {"groups": ["system:masters"], "arn": "arn:aws:iam::000000000000:user/bob", "username": "bob"}
 
@@ -291,6 +323,8 @@ def test_apply_cm_identity_mappings_with_userarn_and_rolearn_and_unknown_mapping
 
 
 def test_apply_cm_identity_mappings_with_no_mapping(api_client):
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     run_sync(iam_mapping.apply_cm_identity_mappings(CONFIGMAP, []))
 
     expected_cm_data = {"mapRoles": yaml.safe_dump([]), "mapUsers": yaml.safe_dump([])}
@@ -301,6 +335,8 @@ def test_apply_cm_identity_mappings_with_no_mapping(api_client):
 
 
 def test_get_cm_identity_mappings_with_empty_mapusers_skips():
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     ret = iam_mapping.get_cm_identity_mappings(CONFIGMAP_MISSING_MAPUSERS)
 
     assert len(ret) == 1
@@ -308,6 +344,8 @@ def test_get_cm_identity_mappings_with_empty_mapusers_skips():
 
 
 def test_get_cm_identity_mappings_with_empty_maproles_skips():
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     ret = iam_mapping.get_cm_identity_mappings(CONFIGMAP_MISSING_MAPROLES)
 
     assert len(ret) == 1
@@ -315,6 +353,8 @@ def test_get_cm_identity_mappings_with_empty_maproles_skips():
 
 
 def test_get_cm_identity_mappings_with_empty_configmap_returns_no_identity():
+    import src.kubernetes_operator.iam_mapping as iam_mapping
+
     ret = iam_mapping.get_cm_identity_mappings(CONFIGMAP_MISSING_DATA)
 
     assert len(ret) == 0
