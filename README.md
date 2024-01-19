@@ -1,24 +1,72 @@
 # CRD controller for AWS EKS Authenticator
-[aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) recently introduced the possibility to use custom resources to configure roles and user bindings.
-However, this version of the app is not available in EKS and is not planned to [at this moment](https://github.com/aws/containers-roadmap/issues/550).
+
+[aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) recently introduced the possibility to
+use custom resources to configure roles and user bindings.
+However, this version of the app is not available in EKS and is not planned
+to [at this moment](https://github.com/aws/containers-roadmap/issues/550).
 So here is an operator to reflect IamIdentityMappings changes in the aws-auth configmap.
 
 ## Get started
-1. Install [poetry](https://python-poetry.org/)
-2. Install the dependencies in a virtual environment `poetry install`
-3. Add the git pre-commit hook `poetry run pre-commit install`.
-4. Make your IDE use the virtualenv that was created by poetry.
 
-To run all tests, use `poetry run pytest`
+Language: Python 3.10+
 
-To manually run all linters, use `pre-commit run` after staging your changes
+### Step 1: Configure your Python environment
 
----
-**NOTE**
+1. Install [pyenv](https://github.com/pyenv/pyenv#installation) to manage your Python environment
+2. Install Python 3.10.13
 
-Every commit will be checked against all linters with pre-commit. If it fails, simply fix the issues, stage new changes, and commit again.
+```bash
+  pyenv install 3.10.13
+```
 
----
+3. In the repository, switch to the chosen Python version
+
+```bash
+  pyenv local 3.10.13
+```
+
+### Step 2: Install [Coveo Stew](https://github.com/coveo/stew) dependencies (CI)
+
+1. [Install pipx](https://pypa.github.io/pipx/)
+2. [Install Poetry](https://python-poetry.org/docs/#installation)
+3. [Install Stew](https://github.com/coveo/stew#installation)
+
+### Step 3: Install Python dependencies
+
+1. Open a pyenv shell for the correct python version
+
+```bash
+pyenv shell 3.10.13
+```
+
+2. Configure Poetry to use our Python version
+
+```bash
+poetry env use $(pyenv which python)
+```
+
+3. Install the dependencies with Poetry for the first time.
+
+```bash
+poetry install
+```
+
+4. Run Stew.
+
+```bash
+stew ci
+```
+
+### Step 4: Set up PyCharm's environment
+
+1. Find the path of the virtual environment created by Poetry:
+
+```bash
+  poetry env info
+```
+
+2. Set that poetry environment as
+   your [PyCharm virtual environment for the project](https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html)
 
 ## Test Operator
 
@@ -27,15 +75,15 @@ Every commit will be checked against all linters with pre-commit. If it fails, s
 You can also test the operator locally in a minikube context.
 
 | WARNING: Make sure you change your context to minikube before doing these commands. |
-| --- |
+|-------------------------------------------------------------------------------------|
 
 1. Create a test config-map `kubectl apply -f kubernetes/test/configmap.yaml`
 2. Create the IamIdentityMapping crd `kubectl apply -f kubernetes/iamidentitymappings.yaml`
 3. Inspect the current state of the configmap with `kubectl get cm -n kube-system aws-auth -o yaml`
-4. Start the operator in minikube `kopf run --dev --debug --standalone --liveness=http://:8080/healthz src/kubernetes_operator/iam_mapping.py`
+4. Start the operator in
+   minikube `kopf run --dev --debug --standalone --liveness=http://:8080/healthz src/kubernetes_operator/iam_mapping.py`
 5. Create, in a different terminal, an IamIdentityMapping `kubectl apply -f kubernetes/test/test-iam-rolearn.yaml`
 6. Verify the change is applied by the operator in the configmap with `kubectl get cm -n kube-system aws-auth -o yaml`
-
 
 ## Deploy
 

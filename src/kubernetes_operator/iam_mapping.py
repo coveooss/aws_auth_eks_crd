@@ -4,11 +4,11 @@ import logging
 from copy import deepcopy
 from os import environ
 from pathlib import Path
-from typing import List
+from typing import List, Any
 
 import kopf
 import yaml
-from kubernetes import client, config
+from kubernetes import client, config  # type: ignore
 from kubernetes.client.models.v1_config_map import V1ConfigMap
 
 logger = logging.getLogger("operator")
@@ -21,7 +21,7 @@ except Exception as error:
         config.load_incluster_config()
     except Exception as error:
         error_str = format(error)
-        raise Exception(f"No k8s config suitable, exiting ({error_str})") from error
+        raise RuntimeError(f"No k8s config suitable, exiting ({error_str})") from error
 else:
     logging.info("Using Kubernetes local configuration")
 
@@ -39,9 +39,9 @@ IGNORED_CM_IDENTITIES = [
 ]
 
 
-@kopf.on.update(GROUP, VERSION, PLURAL)
+@kopf.on.update(GROUP, VERSION, PLURAL)  # type: ignore
 @kopf.on.create(GROUP, VERSION, PLURAL)
-async def create_mapping(spec: dict, diff: list, **_) -> None:
+async def create_mapping(spec: dict, diff: list, **_: Any) -> None:
     """Create/update an identity mapping in the aws-auth configmap with the corresponding IamIdentityMapping.
 
     This method accepts mappings for userarn and rolearn with groups.
@@ -65,8 +65,8 @@ async def create_mapping(spec: dict, diff: list, **_) -> None:
     await apply_cm_identity_mappings(configmap, updated_mapping)
 
 
-@kopf.on.delete(GROUP, VERSION, PLURAL)
-async def delete_mapping(spec: dict, **_) -> None:
+@kopf.on.delete(GROUP, VERSION, PLURAL)  # type: ignore
+async def delete_mapping(spec: dict, **_: Any) -> None:
     """Delete the identity mapping in the aws-auth configmap corresponding to the deleted IamIdentityMapping.
 
     :param spec: The spec of the removed IamIdentityMapping
@@ -82,7 +82,7 @@ async def delete_mapping(spec: dict, **_) -> None:
 
 
 @kopf.on.startup()
-def on_startup(logger, **_) -> None:
+def on_startup(logger, **_: Any) -> None:  # type: ignore
     """Deploy the CRD and synchronize the existing mappings on startup."""
     # Do a full synchronization at the start
     logger.info("Deploy CRD definition")
@@ -92,7 +92,7 @@ def on_startup(logger, **_) -> None:
 
 
 @kopf.on.probe(id="sync")
-def get_monitoring_status(**_) -> bool:
+def get_monitoring_status(**_: Any) -> bool:
     """Check if the aws-auth configmap mappings are in sync with the IamIdentityMappings."""
     return check_synchronization()
 
@@ -105,7 +105,7 @@ def check_synchronization() -> bool:
 
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
     identities_in_cm = get_cm_identity_mappings(configmap)
-    identities_in_cm = identities_in_cm if isinstance(identities_in_cm, list) else list()
+    identities_in_cm = identities_in_cm if isinstance(identities_in_cm, list) else []
     identities_in_cm = [u["username"] for u in identities_in_cm]
 
     # Allow some mappings in the aws-auth ConfigMap to exist without being defined
@@ -119,7 +119,7 @@ def check_synchronization() -> bool:
 
     if identities_in_cm_set != set(identities_in_crd):
         # Raise exception to make the monitoring probe fail
-        raise Exception("monitoring check result : out-of-sync")
+        raise RuntimeError("monitoring check result : out-of-sync")
 
     return True
 
@@ -127,7 +127,7 @@ def check_synchronization() -> bool:
 def deploy_crd_definition() -> None:
     """Deploy the CRD (IamIdentityMapping) located in kubernetes/."""
     crd_file_path = get_project_root() / "kubernetes" / "iamidentitymappings.yaml"
-    with open(crd_file_path.resolve(), "r") as stream:
+    with open(crd_file_path.resolve(), "r", encoding="UTF8") as stream:
         body = yaml.safe_load(stream)
     extensions_api = client.ApiextensionsV1Api()
     crds = extensions_api.list_custom_resource_definition()
@@ -156,7 +156,7 @@ def full_synchronize() -> None:
     identity_mappings = custom_objects_API.list_cluster_custom_object(GROUP, VERSION, PLURAL)
 
     cm_identities = get_cm_identity_mappings(configmap)
-    cm_identities = cm_identities if isinstance(cm_identities, list) else list()
+    cm_identities = cm_identities if isinstance(cm_identities, list) else []
 
     for identity_mapping in identity_mappings["items"]:
         cm_identities = ensure_identity(identity_mapping["spec"], cm_identities)
