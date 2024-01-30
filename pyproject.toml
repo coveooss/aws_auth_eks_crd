@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aws_auth_eks_crd"
-version = "0.7.0"
+version = "0.8.0"
 description = "Operator to configure the aws-auth config map with IamIdentityMappings"
 readme = "README.md"
 repository = "https://github.com/coveooss/aws_auth_eks_crd"
@@ -10,13 +10,13 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "3.10.13"
+python = "3.12.1"
 kubernetes = "28.1.0"
-kopf = "1.36.2"
+kopf = "1.37.1"
 
 [tool.poetry.dev-dependencies]
-bandit = "1.7.6"
-black = "23.12.1"
+bandit = "1.7.7"
+black = "24.1.1"
 invoke = "2.2.0"
 mypy = "1.8.0"
 pre-commit = "3.6.0"
@@ -26,7 +26,7 @@ pylint = "3.0.3"
 pytest = "7.4.4"
 pytest-cov = "4.1.0"
 PyYAML = "6.0.1"
-vulture = "2.10"
+vulture = "2.11"
 
 [tool.poetry.group.dev.dependencies]
 types-pyyaml = "^6.0.12.12"

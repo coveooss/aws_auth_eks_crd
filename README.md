@@ -11,21 +11,21 @@ and [the official announcement](https://aws.amazon.com/blogs/containers/a-deep-d
 
 ## Get started
 
-Language: Python 3.10+
+Language: Python 3.12+
 
 ### Step 1: Configure your Python environment
 
 1. Install [pyenv](https://github.com/pyenv/pyenv#installation) to manage your Python environment
-2. Install Python 3.10.13
+2. Install Python 3.12.1
 
 ```bash
-  pyenv install 3.10.13
+  pyenv install 3.12.1
 ```
 
 3. In the repository, switch to the chosen Python version
 
 ```bash
-  pyenv local 3.10.13
+  pyenv local 3.12.1
 ```
 
 ### Step 2: Install [Coveo Stew](https://github.com/coveo/stew) dependencies (CI)
@@ -39,7 +39,7 @@ Language: Python 3.10+
 1. Open a pyenv shell for the correct python version
 
 ```bash
-pyenv shell 3.10.13
+pyenv shell 3.12.1
 ```
 
 2. Configure Poetry to use our Python version
