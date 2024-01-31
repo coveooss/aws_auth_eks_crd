@@ -118,8 +118,17 @@ def check_synchronization() -> bool:
         identities_to_ignore = identities_to_ignore + environ.get("IGNORED_CM_IDENTITIES", "").split(",")
 
     identities_in_cm_set = set(identities_in_cm) - set(identities_to_ignore)
+    identities_in_crd_set = set(identities_in_crd)
 
-    if identities_in_cm_set != set(identities_in_crd):
+    if identities_in_cm_set != identities_in_crd_set:
+        logger.error(
+            "The aws-auth configmap and the IamIdentityMappings are out of sync.\n"
+            "The following users are in the aws-auth configmap but not in the IamIdentityMappings: %s\n"
+            "The following users are in the IamIdentityMappings but not in the aws-auth configmap: %s\n",
+            list(identities_in_cm_set - identities_in_crd_set),
+            list(identities_in_crd_set - identities_in_cm_set),
+        )
+
         # Raise exception to make the monitoring probe fail
         raise RuntimeError("monitoring check result : out-of-sync")
 

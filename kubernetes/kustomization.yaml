@@ -10,4 +10,4 @@ resources:
 images:
 - name: coveo/aws-auth-operator:0.1
   newName: ghcr.io/coveooss/aws_auth_eks_crd
-  newTag: 0.7.0
+  newTag: 0.8.1
