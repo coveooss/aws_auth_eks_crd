@@ -10,7 +10,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "3.12.2"
+python = "~3.12,<3.13"
 kubernetes = "28.1.0"
 kopf = "1.37.1"
 
