@@ -20,7 +20,7 @@ on:
 jobs:
   ci:
     name: CI TEST
-    runs-on: ubuntu-latest
+    runs-on:  [ coveo, linux, x64, eks memory-request=6G memory-limit=8G ]
     steps:
       - uses: coveo/stew@main
         name: Stew
