@@ -19,7 +19,7 @@ on:
 
 jobs:
   ci:
-    name: CI
+    name: CI TEST
     runs-on: ubuntu-latest
     steps:
       - uses: coveo/stew@main
