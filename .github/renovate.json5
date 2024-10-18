@@ -1,9 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "branchPrefix": "renovate/",
   "dependencyDashboard": true,
   "extends": [
-    "config:base",
+    "github>coveooss/renovate-presets",
     "helpers:pinGitHubActionDigests",
     "schedule:earlyMondays",
     "group:allNonMajor"
@@ -12,10 +11,7 @@
     "dependency update",
     "bot"
   ],
-  "prConcurrentLimit": 3,
   "prHeader": "DEF-160",
-  "rebaseWhen": "auto",
-  "reviewersFromCodeOwners": true,
   "suppressNotifications": [
     "prIgnoreNotification"
   ],
