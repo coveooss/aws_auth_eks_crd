@@ -19,13 +19,13 @@ Language: Python 3.12+
 2. Install Python 3.12
 
 ```bash
-  pyenv install 3.12
+  pyenv install 3.13
 ```
 
 3. In the repository, switch to the chosen Python version
 
 ```bash
-  pyenv local 3.12
+  pyenv local 3.13
 ```
 
 ### Step 2: Install [Coveo Stew](https://github.com/coveo/stew) dependencies (CI)
@@ -39,7 +39,7 @@ Language: Python 3.12+
 1. Open a pyenv shell for the correct python version
 
 ```bash
-pyenv shell 3.12
+pyenv shell 3.13
 ```
 
 2. Configure Poetry to use our Python version

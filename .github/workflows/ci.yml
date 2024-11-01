@@ -25,5 +25,5 @@ jobs:
       - uses: coveo/stew@main
         name: Stew
         with:
-          python-version: "3.12"
+          python-version: "3.13"
           project-name: aws_auth_eks_crd
