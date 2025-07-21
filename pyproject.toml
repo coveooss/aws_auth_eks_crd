@@ -12,19 +12,19 @@ packages = [
 [tool.poetry.dependencies]
 python = ">=3.13,<3.14"
 kubernetes = "33.1.0"
-kopf = "1.37.4"
+kopf = "1.38.0"
 
 [tool.poetry.dev-dependencies]
-bandit = "1.8.2"
+bandit = "1.8.6"
 black = "25.1.0"
 invoke = "2.2.0"
-mypy = "1.14.1"
-pre-commit = "4.1.0"
-pycodestyle = "2.12.1"
+mypy = "1.17.0"
+pre-commit = "4.2.0"
+pycodestyle = "2.14.0"
 pydocstyle = "6.3.0"
-pylint = "3.3.4"
-pytest = "8.3.4"
-pytest-cov = "6.0.0"
+pylint = "3.3.7"
+pytest = "8.4.1"
+pytest-cov = "6.2.1"
 PyYAML = "6.0.2"
 vulture = "2.14"
 
