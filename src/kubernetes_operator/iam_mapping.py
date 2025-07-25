@@ -41,8 +41,8 @@ IGNORED_CM_IDENTITIES = [
 ]
 
 
-@kopf.on.update(GROUP, VERSION, PLURAL)  # type: ignore
-@kopf.on.create(GROUP, VERSION, PLURAL)
+@kopf.on.update(GROUP, VERSION, PLURAL)
+@kopf.on.create(GROUP, VERSION, PLURAL)  # type: ignore
 async def create_mapping(spec: dict, diff: list, **_: Any) -> None:
     """Create/update an identity mapping in the aws-auth configmap with the corresponding IamIdentityMapping.
 
