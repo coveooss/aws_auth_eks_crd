@@ -27,7 +27,7 @@ jobs:
         with:
           egress-policy: audit
 
-      - uses: coveo/stew@main
+      - uses: coveo/stew@c28c8eb7fc960587b93f789dba58879f5f102806 # main
         name: Stew
         with:
           python-version: "3.13"
