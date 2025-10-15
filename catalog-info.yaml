@@ -36,7 +36,7 @@ metadata:
   # will configure integrations with external systems if you need to.
   # See: https://backstage.io/docs/features/software-catalog/descriptor-format#annotations-optional
   annotations:
-    deployment-pipeline.coveo.com/product: infra-kubernetes
+    deployment-pipeline.coveo.com/product: infra-kubernetes-core-features
 
   # List of tags. They have no special semantics. They are shown in some
   # interfaces and can be used for filtering.
