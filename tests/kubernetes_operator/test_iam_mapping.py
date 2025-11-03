@@ -108,7 +108,7 @@ def api_client():
 
 @fixture
 def custom_objects_api():
-    with patch(f"{BASE_PATH}.custom_objects_API") as custom_objects_api_mock:
+    with patch(f"{BASE_PATH}.custom_objects_api") as custom_objects_api_mock:
         custom_objects_api_mock.list_cluster_custom_object.return_value = IAM_IDENTITY_MAPPINGS
         yield custom_objects_api_mock
 
