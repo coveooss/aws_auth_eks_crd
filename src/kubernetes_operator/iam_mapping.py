@@ -28,7 +28,7 @@ else:
     logging.info("Using Kubernetes local configuration")
 
 API = client.CoreV1Api()
-custom_objects_API = client.CustomObjectsApi()
+custom_objects_api = client.CustomObjectsApi()
 GROUP = "iamauthenticator.k8s.aws"
 VERSION = "v1alpha1"
 PLURAL = "iamidentitymappings"
@@ -102,7 +102,7 @@ def get_monitoring_status(**_: Any) -> bool:
 def check_synchronization() -> bool:
     """Compare the aws-auth configmap to the IamIdentityMappings and return if they are in sync."""
 
-    identity_mappings = custom_objects_API.list_cluster_custom_object(GROUP, VERSION, PLURAL)
+    identity_mappings = custom_objects_api.list_cluster_custom_object(GROUP, VERSION, PLURAL)
     identities_in_crd = [im["spec"]["username"] for im in identity_mappings["items"]]
 
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
@@ -164,7 +164,7 @@ def full_synchronize() -> None:
     """
     # Get Kubernetes" objects
     configmap = API.read_namespaced_config_map("aws-auth", "kube-system")
-    identity_mappings = custom_objects_API.list_cluster_custom_object(GROUP, VERSION, PLURAL)
+    identity_mappings = custom_objects_api.list_cluster_custom_object(GROUP, VERSION, PLURAL)
 
     cm_identities = get_cm_identity_mappings(configmap)
     cm_identities = cm_identities if isinstance(cm_identities, list) else []
