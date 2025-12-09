@@ -1,4 +1,4 @@
-FROM python:3.14-alpine@sha256:8373231e1e906ddfb457748bfc032c4c06ada8c759b7b62d9c73ec2a3c56e710
+FROM python:3.14-alpine@sha256:2a77c2640cc80f5506babd027c883abc55f04d44173fd52eeacea9d3b978e811
 
 LABEL description="Kubernetes operator to sync IamIdentityMappings to the aws-auth configmap"
 LABEL source.repository="aws_auth_eks_crd"
