@@ -12,7 +12,7 @@ packages = [
 [tool.poetry.dependencies]
 python = ">=3.13,<3.15"
 kubernetes = "34.1.0"
-kopf = "1.39.1"
+kopf = "1.40.0"
 
 [tool.poetry.dev-dependencies]
 bandit = "1.9.2"
