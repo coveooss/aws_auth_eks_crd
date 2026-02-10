@@ -21,12 +21,12 @@ jobs:
     
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2
       with:
         egress-policy: audit
 
     - name: Check out the repo
-      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         
     - name: Login to GitHub Container Registry
       uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
@@ -36,7 +36,7 @@ jobs:
         password: ${{ github.token }}
       
     - name: Build and push Docker images
-      uses: docker/build-push-action@8c1e8f8e5bf845ba3773a14f3967965548a2341e
+      uses: docker/build-push-action@ee4ca427a2f43b6a16632044ca514c076267da23
       with:
         context: .
         push: true
