@@ -36,7 +36,7 @@ jobs:
         password: ${{ github.token }}
       
     - name: Build and push Docker images
-      uses: docker/build-push-action@dbac3ca1e5410ec04d2cce48cfbcfa3175fb8f4f
+      uses: docker/build-push-action@c5117b60bc829f00aaacb038e99de2712bee6e6e
       with:
         context: .
         push: true
