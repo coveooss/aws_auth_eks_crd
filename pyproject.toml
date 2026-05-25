@@ -16,7 +16,7 @@ kopf = "1.44.5"
 
 [tool.poetry.dev-dependencies]
 bandit = "1.9.4"
-black = "26.3.1"
+black = "26.5.1"
 invoke = "3.0.3"
 mypy = "2.1.0"
 pre-commit = "4.6.0"
