@@ -12,7 +12,10 @@ metadata:
   annotations:
     deployment-pipeline.coveo.com/product: infra-kubernetes-core-features
     wiz.io/project-id: ca37e6ce-f76e-50ae-b0af-6fb005e2c073
-    wiz.io/repository-external-id: 47fb2c07-71d9-56a3-874f-f0c16acb95e5
+    # Wiz tab: the repository, then its `master` branch.
+    wiz.io/asset-id: >-
+      47fb2c07-71d9-56a3-874f-f0c16acb95e5,
+      c7ca2977-e2b1-505b-95dd-8f7367ddd60e
     snyk.io/org-id: 6380f72a-82b3-46bb-9bf6-0e7af0731ee4
   links:
     - url: https://aws.amazon.com/blogs/containers/a-deep-dive-into-simplified-amazon-eks-access-management-controls/
