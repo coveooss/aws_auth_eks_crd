@@ -5,7 +5,8 @@
     "github>coveooss/renovate-presets",
     "helpers:pinGitHubActionDigests",
     "schedule:earlyMondays",
-    "group:allNonMajor"
+    "group:allNonMajor",
+    "github>coveooss/renovate-presets//poetry-version.json"
   ],
   "labels": [
     "dependency update",
