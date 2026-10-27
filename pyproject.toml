@@ -11,7 +11,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.13,<3.16"
-kubernetes = "36.0.3"
+kubernetes = "37.0.1"
 kopf = "1.45.1"
 
 [tool.poetry.dev-dependencies]

@@ -36,16 +36,17 @@ DATA = {"mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN]), "mapUsers": yaml.safe_dum
 DATA_MISSING_MAPUSERS = {"mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN])}
 DATA_MISSING_MAPROLES = {"mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE])}
 
-CONFIGMAP = client.V1ConfigMap(api_version="v1", kind="ConfigMap", data=DATA, metadata={"key": "some_metadata"})
+# Must be a valid V1ObjectMeta: kubernetes>=37 models are pydantic and reject unknown fields.
+CONFIGMAP_METADATA = {"name": "aws-auth", "namespace": "kube-system"}
+
+CONFIGMAP = client.V1ConfigMap(api_version="v1", kind="ConfigMap", data=DATA, metadata=CONFIGMAP_METADATA)
 CONFIGMAP_MISSING_MAPUSERS = client.V1ConfigMap(
-    api_version="v1", kind="ConfigMap", data=DATA_MISSING_MAPUSERS, metadata={"key": "some_metadata"}
+    api_version="v1", kind="ConfigMap", data=DATA_MISSING_MAPUSERS, metadata=CONFIGMAP_METADATA
 )
 CONFIGMAP_MISSING_MAPROLES = client.V1ConfigMap(
-    api_version="v1", kind="ConfigMap", data=DATA_MISSING_MAPROLES, metadata={"key": "some_metadata"}
+    api_version="v1", kind="ConfigMap", data=DATA_MISSING_MAPROLES, metadata=CONFIGMAP_METADATA
 )
-CONFIGMAP_MISSING_DATA = client.V1ConfigMap(
-    api_version="v1", kind="ConfigMap", data={}, metadata={"key": "some_metadata"}
-)
+CONFIGMAP_MISSING_DATA = client.V1ConfigMap(api_version="v1", kind="ConfigMap", data={}, metadata=CONFIGMAP_METADATA)
 DIFF_NEW_USER_MARK = [
     (
         "add",
@@ -209,7 +210,7 @@ def test_check_synchronization_no_diff_with_ignored_identity(api_client, custom_
         "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE]),
     }
     configmap_with_ignore_mapping = client.V1ConfigMap(
-        api_version="v1", kind="ConfigMap", data=data, metadata={"key": "some_metadata"}
+        api_version="v1", kind="ConfigMap", data=data, metadata=CONFIGMAP_METADATA
     )
     api_client.read_namespaced_config_map.return_value = configmap_with_ignore_mapping
 
@@ -229,7 +230,7 @@ def test_check_synchronization_no_diff_with_ignored_identity_env(api_client, cus
         "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE, SPEC_USER_MARK]),
     }
     configmap_with_ignore_mapping = client.V1ConfigMap(
-        api_version="v1", kind="ConfigMap", data=data, metadata={"key": "some_metadata"}
+        api_version="v1", kind="ConfigMap", data=data, metadata=CONFIGMAP_METADATA
     )
     api_client.read_namespaced_config_map.return_value = configmap_with_ignore_mapping
 
@@ -268,7 +269,7 @@ def test_apply_cm_identity_mappings_with_userarn(api_client):
 
     expected_cm_data = {"mapRoles": yaml.safe_dump([]), "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE])}
     expected_configmap = client.V1ConfigMap(
-        api_version="v1", kind="ConfigMap", data=expected_cm_data, metadata={"key": "some_metadata"}
+        api_version="v1", kind="ConfigMap", data=expected_cm_data, metadata=CONFIGMAP_METADATA
     )
     api_client.patch_namespaced_config_map.assert_called_with("aws-auth", "kube-system", expected_configmap)
 
@@ -280,7 +281,7 @@ def test_apply_cm_identity_mappings_with_rolearn(api_client):
 
     expected_cm_data = {"mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN]), "mapUsers": yaml.safe_dump([])}
     expected_configmap = client.V1ConfigMap(
-        api_version="v1", kind="ConfigMap", data=expected_cm_data, metadata={"key": "some_metadata"}
+        api_version="v1", kind="ConfigMap", data=expected_cm_data, metadata=CONFIGMAP_METADATA
     )
     api_client.patch_namespaced_config_map.assert_called_with("aws-auth", "kube-system", expected_configmap)
 
@@ -295,7 +296,7 @@ def test_apply_cm_identity_mappings_with_unknown_mapping(api_client, caplog):
 
     expected_cm_data = {"mapRoles": yaml.safe_dump([]), "mapUsers": yaml.safe_dump([])}
     expected_configmap = client.V1ConfigMap(
-        api_version="v1", kind="ConfigMap", data=expected_cm_data, metadata={"key": "some_metadata"}
+        api_version="v1", kind="ConfigMap", data=expected_cm_data, metadata=CONFIGMAP_METADATA
     )
     api_client.patch_namespaced_config_map.assert_called_with("aws-auth", "kube-system", expected_configmap)
 
@@ -314,7 +315,7 @@ def test_apply_cm_identity_mappings_with_userarn_and_rolearn_and_unknown_mapping
 
     expected_cm_data = {"mapRoles": yaml.safe_dump([SPEC_CSEC_ADMIN]), "mapUsers": yaml.safe_dump([SPEC_USER_JOHNDOE])}
     expected_configmap = client.V1ConfigMap(
-        api_version="v1", kind="ConfigMap", data=expected_cm_data, metadata={"key": "some_metadata"}
+        api_version="v1", kind="ConfigMap", data=expected_cm_data, metadata=CONFIGMAP_METADATA
     )
     api_client.patch_namespaced_config_map.assert_called_with("aws-auth", "kube-system", expected_configmap)
     assert caplog.messages
@@ -329,7 +330,7 @@ def test_apply_cm_identity_mappings_with_no_mapping(api_client):
 
     expected_cm_data = {"mapRoles": yaml.safe_dump([]), "mapUsers": yaml.safe_dump([])}
     expected_configmap = client.V1ConfigMap(
-        api_version="v1", kind="ConfigMap", data=expected_cm_data, metadata={"key": "some_metadata"}
+        api_version="v1", kind="ConfigMap", data=expected_cm_data, metadata=CONFIGMAP_METADATA
     )
     api_client.patch_namespaced_config_map.assert_called_with("aws-auth", "kube-system", expected_configmap)
 
