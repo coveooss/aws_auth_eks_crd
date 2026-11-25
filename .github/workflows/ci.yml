@@ -15,89 +15,20 @@ on:
       - 'tests/**'
       - poetry.lock
       - pyproject.toml
-      - Dockerfile
-      - .dockerignore
       - '.github/workflows/**'
-
-permissions:
-  contents: read
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   ci:
     name: CI
     runs-on: ubuntu-latest
-    env:
-      # renovate: datasource=pypi depName=pipx
-      PIPX_VERSION: "1.19.1"
-      # renovate: datasource=pypi depName=poetry
-      POETRY_VERSION: "1.8.5"
-      # renovate: datasource=pypi depName=poetry-plugin-export
-      POETRY_PLUGIN_EXPORT_VERSION: "1.8.0"
-      # renovate: datasource=pypi depName=coveo-stew
-      COVEO_STEW_VERSION: "4.1.6"
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2
         with:
-          egress-policy: block
-          disable-sudo: true
-          allowed-endpoints: >
-            api.github.com:443
-            github.com:443
-            raw.githubusercontent.com:443
-            release-assets.githubusercontent.com:443
-            objects.githubusercontent.com:443
-            pypi.org:443
-            files.pythonhosted.org:443
+          egress-policy: audit
 
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      - uses: coveo/stew@c28c8eb7fc960587b93f789dba58879f5f102806 # main
+        name: Stew
         with:
           python-version: "3.13"
-
-      - name: Install poetry and stew
-        run: |
-          python -m pip install --user --disable-pip-version-check "pipx==$PIPX_VERSION"
-          python -m pipx install "poetry==$POETRY_VERSION"
-          python -m pipx inject poetry "poetry-plugin-export==$POETRY_PLUGIN_EXPORT_VERSION"
-          python -m pipx install "coveo-stew==$COVEO_STEW_VERSION"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-
-      - name: Run stew ci
-        run: stew ci aws_auth_eks_crd --exact-match
-
-  docker:
-    name: Docker build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
-        with:
-          egress-policy: block
-          disable-sudo: true
-          allowed-endpoints: >
-            api.github.com:443
-            github.com:443
-            registry-1.docker.io:443
-            auth.docker.io:443
-            index.docker.io:443
-            production.cloudflare.docker.com:443
-            production.cloudfront.docker.com:443
-            docker-images-prod.6aa30f8b08e16409b46e0173d6de2f56.r2.cloudflarestorage.com:443
-            dl-cdn.alpinelinux.org:443
-            pypi.org:443
-            files.pythonhosted.org:443
-
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Build image
-        run: docker build --pull --tag aws_auth_eks_crd:ci .
+          project-name: aws_auth_eks_crd

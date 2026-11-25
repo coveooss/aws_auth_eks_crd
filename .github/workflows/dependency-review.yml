@@ -4,13 +4,12 @@ on:
   pull_request:
     branches: [ "master" ]
 
-permissions: {}
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
     dependency-Review:
-      permissions:
-        contents: read
-        pull-requests: write
       uses: coveo/public-actions/.github/workflows/dependency-review.yml@230871ba17b7387ca26fd3a2ce5c409f657880cf # main
       with:
         public: true

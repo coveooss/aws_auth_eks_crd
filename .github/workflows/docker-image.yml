@@ -33,25 +33,7 @@ jobs:
       - name: Harden Runner
         uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
         with:
-          egress-policy: block
-          disable-sudo: true
-          allowed-endpoints: >
-            api.github.com:443
-            github.com:443
-            ghcr.io:443
-            pkg-containers.githubusercontent.com:443
-            registry-1.docker.io:443
-            auth.docker.io:443
-            index.docker.io:443
-            production.cloudflare.docker.com:443
-            production.cloudfront.docker.com:443
-            docker-images-prod.6aa30f8b08e16409b46e0173d6de2f56.r2.cloudflarestorage.com:443
-            dl-cdn.alpinelinux.org:443
-            pypi.org:443
-            files.pythonhosted.org:443
-            fulcio.sigstore.dev:443
-            rekor.sigstore.dev:443
-            tuf-repo-cdn.sigstore.dev:443
+          egress-policy: audit
 
       - name: Validate version
         run: |
@@ -106,15 +88,3 @@ jobs:
           subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
-
-      - name: Summary
-        env:
-          DIGEST: ${{ steps.build.outputs.digest }}
-        run: |
-          {
-            echo "### Published \`$IMAGE:$VERSION\`"
-            echo
-            echo "Digest: \`$DIGEST\`"
-            echo
-            echo "Verify: \`gh attestation verify oci://$IMAGE@$DIGEST --repo $GITHUB_REPOSITORY --source-ref refs/heads/master\`"
-          } >> "$GITHUB_STEP_SUMMARY"

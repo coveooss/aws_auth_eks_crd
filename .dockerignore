@@ -1,7 +1,0 @@
-*
-!src/
-!kubernetes/iamidentitymappings.yaml
-!pyproject.toml
-!poetry.lock
-!README.md
-**/__pycache__

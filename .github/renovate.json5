@@ -21,34 +21,5 @@
     "labels": [
       "security"
     ]
-  },
-  "kubernetes": {
-    "managerFilePatterns": [
-      "/^kubernetes/.+\\.ya?ml$/"
-    ]
-  },
-  "customManagers": [
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/^\\.github/workflows/.+\\.ya?ml$/",
-        "/(^|/)Dockerfile$/"
-      ],
-      "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+(?:ARG\\s+)?[A-Z_]+[:=]\\s*\"?(?<currentValue>[^\"\\s]+)\"?"
-      ]
-    }
-  ],
-  "packageRules": [
-    {
-      "matchDatasources": [
-        "pypi"
-      ],
-      "matchPackageNames": [
-        "poetry",
-        "poetry-plugin-export"
-      ],
-      "groupName": "poetry"
-    }
-  ]
+  }
 }
