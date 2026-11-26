@@ -16,17 +16,16 @@ concurrency:
 
 jobs:
   push_to_registries:
-    name: Push image to GHCR
+    name: Push image to Docker Hub
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     environment: release
     permissions:
       contents: read
-      packages: write
       id-token: write
       attestations: write
     env:
-      IMAGE: ghcr.io/coveooss/aws_auth_eks_crd
+      IMAGE: docker.io/coveo/aws-auth-operator
       VERSION: ${{ inputs.version }}
 
     steps:
@@ -50,12 +49,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
-      - name: Login to GitHub Container Registry
+      - name: Login to Docker Hub
         uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        env:
+          DOCKERHUB_OIDC_CONNECTIONID: ${{ vars.DOCKERHUB_OIDC_CONNECTIONID }}
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
+          username: coveo
 
       - name: Refuse to overwrite an existing tag
         run: |
@@ -85,6 +84,6 @@ jobs:
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-name: ${{ env.IMAGE }}
+          subject-name: index.docker.io/coveo/aws-auth-operator
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
