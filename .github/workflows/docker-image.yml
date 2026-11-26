@@ -4,41 +4,86 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Semantic version to be built"
+        description: "Semantic version to be built (e.g. 1.2.3)"
         required: true
         type: string
 
-permissions:
-  contents: read
+permissions: {}
+
+concurrency:
+  group: release-image
+  cancel-in-progress: false
 
 jobs:
   push_to_registries:
-    name: Push Docker image to Dockerhub
+    name: Push image to Docker Hub
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    environment: release
     permissions:
-      packages: write
       contents: read
-    
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2
-      with:
-        egress-policy: audit
+      id-token: write
+      attestations: write
+    env:
+      IMAGE: docker.io/coveo/aws-auth-operator
+      VERSION: ${{ inputs.version }}
 
-    - name: Check out the repo
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
-      with:
-        registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ github.token }}
-      
-    - name: Build and push Docker images
-      uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f
-      with:
-        context: .
-        push: true
-        tags: ghcr.io/coveooss/aws_auth_eks_crd:${{ github.event.inputs.version }}
-        labels: ${{ github.event.inputs.version }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+        with:
+          egress-policy: audit
+
+      - name: Validate version
+        run: |
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::version must be MAJOR.MINOR.PATCH, got '$VERSION'"
+            exit 1
+          fi
+
+      - name: Check out the repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        env:
+          DOCKERHUB_OIDC_CONNECTIONID: ${{ vars.DOCKERHUB_OIDC_CONNECTIONID }}
+        with:
+          username: coveo
+
+      - name: Refuse to overwrite an existing tag
+        run: |
+          if output=$(docker buildx imagetools inspect "$IMAGE:$VERSION" 2>&1); then
+            echo "::error::$IMAGE:$VERSION already exists; published tags are immutable"
+            exit 1
+          fi
+          if ! grep -qi "not found" <<<"$output"; then
+            echo "::error::could not determine whether $IMAGE:$VERSION exists: $output"
+            exit 1
+          fi
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: true
+          provenance: mode=max
+          sbom: true
+          tags: ${{ env.IMAGE }}:${{ env.VERSION }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ env.VERSION }}
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: index.docker.io/coveo/aws-auth-operator
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
